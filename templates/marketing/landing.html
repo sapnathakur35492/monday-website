@@ -1,0 +1,59 @@
+{% extends "base.html" %}
+
+{% block extra_head %}
+<!-- AOS Library -->
+<link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet">
+<script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        AOS.init({
+            duration: 800,
+            once: true,
+        });
+    });
+</script>
+{% endblock %}
+
+{% block content %}
+<div class="relative overflow-hidden bg-white">
+    <!-- Hero Section -->
+    <div class="mx-auto max-w-7xl px-6 pb-24 pt-10 sm:pb-32 lg:flex lg:px-8 lg:py-40">
+        <div class="mx-auto max-w-2xl lg:mx-0 lg:max-w-xl lg:flex-shrink-0 lg:pt-8" data-aos="fade-up">
+            <h1 class="mt-10 text-4xl font-bold tracking-tight text-gray-900 sm:text-6xl">
+                {{ page.title|default:"ProjectFlow: Work Without Limits" }}
+            </h1>
+            <p class="mt-6 text-lg leading-8 text-gray-600" data-aos="fade-up" data-aos-delay="100">
+                {{ page.content|default:"The OS for your work. Plan, manage, and automate your projects."|safe }}
+            </p>
+            <div class="mt-10 flex items-center gap-x-6" data-aos="fade-up" data-aos-delay="200">
+                <a href="{% url 'signup' %}"
+                    class="rounded-full bg-indigo-600 px-6 py-3 text-sm font-semibold text-white shadow-lg shadow-indigo-500/30 hover:bg-indigo-500 transition-all hover:-translate-y-1">Get
+                    Started</a>
+                <a href="#" class="text-sm font-semibold leading-6 text-gray-900 flex items-center gap-1 group">
+                    Live demo <span aria-hidden="true" class="group-hover:translate-x-1 transition-transform">→</span>
+                </a>
+            </div>
+        </div>
+        <!-- Visual -->
+        <div class="mx-auto mt-16 flex max-w-2xl sm:mt-24 lg:ml-10 lg:mt-0 lg:mr-0 lg:max-w-none lg:flex-none xl:ml-32"
+            data-aos="fade-left" data-aos-duration="1000">
+            <div class="max-w-3xl flex-none sm:max-w-5xl lg:max-w-none">
+                <div
+                    class="rounded-xl bg-gray-900/5 p-2 ring-1 ring-inset ring-gray-900/10 lg:rounded-2xl lg:p-4 hover:scale-[1.01] transition-transform duration-500">
+                    <div
+                        class="rounded-lg bg-gradient-to-br from-indigo-500 via-purple-500 to-pink-500 shadow-2xl ring-1 ring-gray-900/10 overflow-hidden p-1">
+                        <div class="bg-white rounded h-64 flex items-center justify-center">
+                            <!-- Placeholder UI -->
+                            <div class="space-y-4 w-3/4 animate-pulse">
+                                <div class="h-4 bg-slate-200 rounded w-3/4"></div>
+                                <div class="h-4 bg-slate-200 rounded"></div>
+                                <div class="h-4 bg-slate-200 rounded w-5/6"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

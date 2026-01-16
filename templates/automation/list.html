@@ -1,0 +1,51 @@
+{% extends "webapp/base_app.html" %}
+
+{% block app_content %}
+<div class="max-w-4xl mx-auto px-6 py-12">
+    <div class="mb-8 flex items-center justify-between">
+        <div class="flex items-center gap-4">
+            <h1 class="text-3xl font-bold text-slate-900">Board Automations</h1>
+            <span class="px-3 py-1 rounded-full bg-slate-100 text-slate-600 text-sm font-medium">{{ rules.count }}
+                active</span>
+        </div>
+        <div class="flex gap-3">
+            <a href="{% url 'board_detail' board.id %}"
+                class="px-4 py-2 text-slate-600 hover:text-slate-900 font-medium">Back to Board</a>
+            <a href="{% url 'create_rule' board.id %}"
+                class="px-4 py-2 rounded-lg bg-indigo-600 text-white font-medium hover:bg-indigo-700 transition-colors shadow-md">
+                + New Automation
+            </a>
+        </div>
+    </div>
+
+    <div class="grid gap-4">
+        {% for rule in rules %}
+        <div
+            class="bg-white p-6 rounded-lg border border-slate-200 shadow-sm flex items-center justify-between group hover:shadow-md transition-shadow">
+            <div class="flex items-center gap-4">
+                <div class="h-10 w-10 rounded-full bg-indigo-50 flex items-center justify-center text-indigo-600">
+                    <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M13 10V3L4 14h7v7l9-11h-7z" />
+                    </svg>
+                </div>
+                <div>
+                    <h3 class="font-semibold text-slate-800 text-lg">{{ rule.name }}</h3>
+                    <p class="text-sm text-slate-500">Last run: Never</p>
+                </div>
+            </div>
+            <div class="opacity-0 group-hover:opacity-100 transition-opacity flex gap-2">
+                <button class="text-slate-400 hover:text-indigo-600 p-2">Edit</button>
+                <button class="text-slate-400 hover:text-red-600 p-2">Delete</button>
+            </div>
+        </div>
+        {% empty %}
+        <div class="text-center py-20 bg-slate-50 rounded-lg border-2 border-dashed border-slate-200">
+            <p class="text-slate-500 mb-4">No automations yet.</p>
+            <a href="{% url 'create_rule' board.id %}" class="text-indigo-600 font-medium hover:underline">Create your
+                first automation</a>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}

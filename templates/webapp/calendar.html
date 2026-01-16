@@ -1,0 +1,112 @@
+{% extends "webapp/base_app.html" %}
+
+{% block app_content %}
+<div class="h-full flex flex-col bg-slate-50">
+    <!-- Board Header -->
+    <div class="px-6 py-4 border-b border-slate-200 bg-white shadow-sm flex flex-col gap-4">
+        <!-- Breadcrumbs -->
+        <div class="flex items-center gap-2 text-sm text-slate-500">
+            <a href="/app/" class="hover:text-indigo-600">Workspaces</a>
+            <span>/</span>
+            <span>{{ board.workspace.name }}</span>
+        </div>
+
+        <div class="flex justify-between items-center">
+            <div>
+                <h1 class="text-2xl font-bold text-slate-900">{{ board.name }}</h1>
+                <p class="text-sm text-slate-500">{{ board.description }}</p>
+            </div>
+            <div class="flex gap-2">
+                <a href="{% url 'automation_list' board.id %}"
+                    class="flex items-center gap-2 px-3 py-1.5 bg-white border border-slate-300 rounded-md text-slate-700 hover:bg-slate-50 transition-colors text-sm font-medium">
+                    <svg class="h-4 w-4 text-indigo-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M13 10V3L4 14h7v7l9-11h-7z" />
+                    </svg>
+                    Automate
+                </a>
+            </div>
+        </div>
+
+        <!-- Tabs -->
+        <div class="flex gap-2 bg-slate-100 p-1 rounded-lg w-max">
+            <a href="{% url 'board_detail' board.id %}"
+                class="px-3 py-1 text-sm font-medium text-slate-600 rounded-md hover:bg-white hover:shadow-sm transition-all">Table</a>
+            <a href="{% url 'board_kanban' board.id %}"
+                class="px-3 py-1 text-sm font-medium text-slate-600 rounded-md hover:bg-white hover:shadow-sm transition-all">Kanban</a>
+            <a href="#"
+                class="px-3 py-1 text-sm font-medium text-slate-900 bg-white shadow-sm rounded-md transition-all">Calendar</a>
+        </div>
+    </div>
+
+    <!-- Calendar Container -->
+    <div class="flex-1 p-6 overflow-hidden">
+        <div class="bg-white rounded-lg shadow border border-slate-200 h-full p-4 overflow-auto">
+            {% if not date_col_id %}
+            <div class="h-full flex flex-col items-center justify-center text-center">
+                <div class="p-4 rounded-full bg-slate-100 mb-4">
+                    <svg class="h-8 w-8 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                    </svg>
+                </div>
+                <h3 class="text-lg font-medium text-slate-900">No Date Column Found</h3>
+                <p class="text-slate-500 max-w-sm mt-2">Add a Date column to your board to visualize items on the
+                    calendar.</p>
+            </div>
+            {% else %}
+            <div id='calendar' class="h-full"></div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<!-- FullCalendar CDN -->
+<script src='https://cdn.jsdelivr.net/npm/fullcalendar@6.1.10/index.global.min.js'></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        var calendarEl = document.getElementById('calendar');
+        if (calendarEl) {
+            var calendar = new FullCalendar.Calendar(calendarEl, {
+                initialView: 'dayGridMonth',
+                headerToolbar: {
+                    left: 'prev,next today',
+                    center: 'title',
+                    right: 'dayGridMonth,timeGridWeek,timeGridDay'
+                },
+                themeSystem: 'standard',
+                height: '100%',
+                events: {{ events_json| safe }
+    },
+        eventClick: function (info) {
+            alert('Item: ' + info.event.title);
+            // In real app, open item side panel
+        }
+            });
+    calendar.render();
+        }
+    });
+</script>
+<style>
+    /* Custom FullCalendar Styling matches Tailwind */
+    .fc {
+        font-family: 'Inter', sans-serif;
+    }
+
+    .fc-toolbar-title {
+        font-size: 1.25rem !important;
+        font-weight: 600 !important;
+        color: #1e293b;
+    }
+
+    .fc-button-primary {
+        background-color: #4f46e5 !important;
+        border-color: #4f46e5 !important;
+    }
+
+    .fc-button-primary:hover {
+        background-color: #4338ca !important;
+        border-color: #4338ca !important;
+    }
+</style>
+{% endblock %}

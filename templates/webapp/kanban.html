@@ -1,0 +1,119 @@
+{% extends "webapp/base_app.html" %}
+
+{% block app_content %}
+<div class="h-full flex flex-col">
+    <!-- Board Header -->
+    <div class="px-6 py-4 border-b border-slate-200 bg-white flex justify-between items-center">
+        <div>
+            <h1 class="text-2xl font-bold text-slate-800">{{ board.name }}</h1>
+            <p class="text-sm text-slate-500">{{ board.description }}</p>
+        </div>
+        <div class="flex gap-2 bg-slate-100 p-1 rounded-lg">
+            <a href="{% url 'board_detail' board.id %}"
+                class="px-3 py-1 text-sm font-medium text-slate-600 rounded-md hover:bg-white hover:shadow-sm">Table</a>
+            <a href="#" class="px-3 py-1 text-sm font-medium text-slate-900 bg-white shadow-sm rounded-md">Kanban</a>
+            <a href="#"
+                class="px-3 py-1 text-sm font-medium text-slate-600 rounded-md hover:bg-white hover:shadow-sm">Calendar</a>
+        </div>
+    </div>
+
+    <!-- Kanban Canvas -->
+    <div class="flex-1 overflow-x-auto overflow-y-hidden bg-slate-100 p-6">
+        <div class="flex h-full gap-6">
+            {% for status, items in columns_data.items %}
+            <!-- Kanban Column -->
+            <div class="w-80 flex-shrink-0 flex flex-col bg-slate-200/50 rounded-xl max-h-full">
+                <!-- Column Header -->
+                <div class="p-4 font-semibold text-slate-700 flex justify-between items-center">
+                    <span class="px-2 py-1 rounded text-sm bg-white shadow-sm"
+                        style="border-left: 4px solid {{ status.color|default:'#cbd5e1' }}">
+                        {{ status }}
+                    </span>
+                    <span class="text-xs text-slate-500">{{ items|length }}</span>
+                </div>
+
+                <!-- Cards Container -->
+                <div class="flex-1 overflow-y-auto p-3 space-y-3 kanban-col" data-status="{{ status }}">
+                    {% for item in items %}
+                    <div class="bg-white p-4 rounded-lg shadow-sm border border-slate-200 cursor-move hover:shadow-md transition-shadow group"
+                        data-id="{{ item.id }}">
+                        <div class="flex justify-between items-start mb-2">
+                            <h4 class="font-medium text-slate-800">{{ item.name }}</h4>
+                            <button class="text-slate-300 opacity-0 group-hover:opacity-100 hover:text-slate-500">
+                                <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+                                </svg>
+                            </button>
+                        </div>
+                        <div class="text-xs text-slate-500 mb-3 flex items-center gap-2">
+                            <span
+                                class="inline-block w-2 h-2 rounded-full bg-{{ item.group.color|default:'gray' }}-400"></span>
+                            {{ item.group.title }}
+                        </div>
+
+                        <!-- Mini Column Values (Date, Person, etc.) -->
+                        <div class="space-y-1">
+                            {% for col_id, val in item.values.items %}
+                            {% if val and col_id != exclude_col_id %}
+                            <div class="text-xs text-slate-600 truncate">
+                                {{ val }}
+                            </div>
+                            {% endif %}
+                            {% endfor %}
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+
+                <!-- Add Card Button -->
+                <div class="p-3">
+                    <button
+                        class="w-full py-2 rounded-md text-slate-500 hover:bg-slate-300/50 text-sm flex items-center justify-center gap-1 transition-colors">
+                        <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+                        </svg>
+                        Add Item
+                    </button>
+                </div>
+            </div>
+            {% endfor %}
+
+            <!-- Add Column Placeholder -->
+            <div
+                class="w-80 flex-shrink-0 flex items-center justify-center rounded-xl border-2 border-dashed border-slate-300 hover:border-indigo-400 hover:bg-indigo-50 transition-colors cursor-pointer group">
+                <span class="text-slate-400 font-medium group-hover:text-indigo-500">+ Add Status</span>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- SortableJS -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Sortable/1.15.0/Sortable.min.js"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        const columns = document.querySelectorAll('.kanban-col');
+
+        columns.forEach(col => {
+            new Sortable(col, {
+                group: 'kanban', // set both lists to same group
+                animation: 150,
+                ghostClass: 'bg-indigo-50',
+                onEnd: function (evt) {
+                    const itemEl = evt.item;
+                    const newStatus = evt.to.dataset.status;
+                    const itemId = itemEl.dataset.id;
+
+                    // Allow moving between columns (Status Change)
+                    // We need an endpoint to handle Drag & Drop status updates + reordering
+                    console.log(`Moved item ${itemId} to status ${newStatus}`);
+
+                    // Simple HTMX or Fetch call to update
+                    // Ideally we should use hx-post but for SortableJS generic integration verify manually first
+                    // For now, let's assume we implement 'update_item_order' to handle this.
+                }
+            });
+        });
+    });
+</script>
+{% endblock %}

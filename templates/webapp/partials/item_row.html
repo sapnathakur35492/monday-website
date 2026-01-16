@@ -1,0 +1,49 @@
+{% load webapp_tags %}
+<tr id="item-{{ item.id }}" class="group hover:bg-slate-50 border-t border-slate-200 animate-slide-up">
+    <td class="border-r border-slate-200" style="border-left: 6px solid {{ item.group.color }}"></td>
+    <td class="px-4 py-2 border-r border-slate-200 font-medium text-slate-800">
+        {{ item.name }}
+    </td>
+    {% for col in columns %}
+    <td class="px-0 py-0 border-r border-slate-200 text-center text-slate-600 align-middle h-full">
+        <!-- Status Cell Logic -->
+        {% with val=item.values|get_value:col.id %}
+        {% if col.type == 'status' %}
+
+        {% if val == 'Done' %}
+        <script>
+            // Simple confetti trigger
+            try {
+                confetti({
+                    particleCount: 100,
+                    spread: 70,
+                    origin: { y: 0.6 }
+                });
+            } catch (e) { }
+        </script>
+        {% endif %}
+
+        <div hx-post="{% url 'update_status' item.id col.id %}" hx-trigger="click" hx-target="#item-{{ item.id }}"
+            hx-swap="outerHTML" class="w-full h-full min-h-[40px] flex items-center justify-center text-white font-medium text-xs uppercase tracking-wide cursor-pointer transition-transform transform active:scale-95
+                    {% if val == 'Done' %}bg-green-500 hover:bg-green-600 shadow-lg shadow-green-500/30
+                    {% elif val == 'Working on it' %}bg-amber-400 hover:bg-amber-500
+                    {% elif val == 'Stuck' %}bg-red-500 hover:bg-red-600
+                    {% else %}bg-slate-300 hover:bg-slate-400 text-slate-600{% endif %}">
+            {{ val|default:"Label" }}
+        </div>
+        {% else %}
+        <div class="h-full min-h-[40px] px-2 flex items-center justify-center truncate hover:bg-slate-50">
+            {{ val }}
+        </div>
+        {% endif %}
+        {% endwith %}
+    </td>
+    {% endfor %}
+    <td class="px-4 py-2 text-center">
+        <button class="text-slate-400 hover:text-red-500 transition-colors">
+            <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+            </svg>
+        </button>
+    </td>
+</tr>

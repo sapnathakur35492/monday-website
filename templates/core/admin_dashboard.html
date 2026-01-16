@@ -1,0 +1,62 @@
+{% extends "webapp/base_app.html" %}
+
+{% block app_content %}
+<div class="max-w-7xl mx-auto px-6 py-12">
+    <h1 class="text-3xl font-bold text-slate-900 mb-8">SaaS Administration</h1>
+
+    <!-- Stats Grid -->
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-12">
+        <div class="bg-white p-6 rounded-lg shadow-sm border border-slate-200">
+            <h3 class="text-sm font-medium text-slate-500 uppercase tracking-wider">Total Users</h3>
+            <p class="mt-2 text-3xl font-bold text-slate-900">{{ total_users }}</p>
+        </div>
+        <div class="bg-white p-6 rounded-lg shadow-sm border border-slate-200">
+            <h3 class="text-sm font-medium text-slate-500 uppercase tracking-wider">Active Organizations</h3>
+            <p class="mt-2 text-3xl font-bold text-slate-900">{{ active_companies }}</p>
+        </div>
+        <div class="bg-white p-6 rounded-lg shadow-sm border border-slate-200">
+            <h3 class="text-sm font-medium text-slate-500 uppercase tracking-wider">Total Boards</h3>
+            <p class="mt-2 text-3xl font-bold text-slate-900">{{ boards_count }}</p>
+        </div>
+        <div class="bg-white p-6 rounded-lg shadow-sm border border-slate-200">
+            <h3 class="text-sm font-medium text-slate-500 uppercase tracking-wider">Active Automations</h3>
+            <p class="mt-2 text-3xl font-bold text-indigo-600">{{ automations_count }}</p>
+        </div>
+    </div>
+
+    <!-- Logs Section -->
+    <div class="bg-white rounded-lg shadow-sm border border-slate-200 overflow-hidden">
+        <div class="px-6 py-4 border-b border-slate-200 bg-slate-50">
+            <h3 class="font-semibold text-slate-800">Recent Automation Activity</h3>
+        </div>
+        <table class="w-full text-left text-sm">
+            <thead class="bg-slate-50 text-slate-500">
+                <tr>
+                    <th class="px-6 py-3">Rule</th>
+                    <th class="px-6 py-3">Status</th>
+                    <th class="px-6 py-3">Time</th>
+                </tr>
+            </thead>
+            <tbody class="divide-y divide-slate-200">
+                {% for log in recent_logs %}
+                <tr>
+                    <td class="px-6 py-4">{{ log.rule.name }}</td>
+                    <td class="px-6 py-4">
+                        <span
+                            class="px-2 py-1 rounded text-xs font-medium 
+                            {% if log.status == 'success' %}bg-green-100 text-green-700{% else %}bg-red-100 text-red-700{% endif %}">
+                            {{ log.status }}
+                        </span>
+                    </td>
+                    <td class="px-6 py-4 text-slate-500">{{ log.executed_at|timesince }} ago</td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="3" class="px-6 py-12 text-center text-slate-500">No activity yet.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

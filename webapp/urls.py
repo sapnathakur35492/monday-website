@@ -1,0 +1,16 @@
+from django.urls import path
+from . import views
+
+urlpatterns = [
+    path('', views.dashboard, name='dashboard'),
+    path('my-work/', views.my_work_view, name='my_work'),
+    path('workspace/create/', views.create_workspace, name='create_workspace'),
+    path('workspace/<int:workspace_id>/board/create/', views.create_board, name='create_board'),
+    path('board/<int:board_id>/', views.board_detail, name='board_detail'),
+    path('group/<int:group_id>/add_item/', views.add_item, name='add_item'),
+    path('item/<int:item_id>/update/<int:col_id>/', views.update_status, name='update_status'),
+    path('board/<int:board_id>/kanban/', views.kanban_view, name='board_kanban'),
+    path('board/<int:board_id>/calendar/', views.calendar_view, name='board_calendar'),
+    path('api/update-order/', views.update_item_order, name='update_item_order'),
+]
+
