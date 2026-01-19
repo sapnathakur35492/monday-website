@@ -151,7 +151,7 @@ AUTH_USER_MODEL = 'core.User'
 
 # Email Backend (Console for dev)
 EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
-STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
+# STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 STATIC_URL = '/static/'
 STATIC_ROOT = '/var/www/amjim/static'
 
