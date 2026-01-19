@@ -186,7 +186,7 @@ def invite_member(request):
             try:
                 send_mail(
                     subject=f"You've been invited to ProjectFlow",
-                    message=f"Hi,\n\n{request.user.username} wants you to join ProjectFlow to collaborate on '{org.name}'.\n\nSign up here: http://localhost:8000/signup/",
+                    message=f"Hi,\n\n{request.user.username} wants you to join ProjectFlow to collaborate on '{org.name}'.\n\nSign up here: https://amjim.com/core/signup/",
                     from_email='system@projectflow.com',
                     recipient_list=[email],
                     fail_silently=True
