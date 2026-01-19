@@ -30,21 +30,5 @@ class Page(models.Model):
     def __str__(self):
         return self.title
 
-class PricingPlan(models.Model):
-    """
-    SaaS Plans for display and billing.
-    """
-    name = models.CharField(max_length=100) # Free, Basic, Pro
-    price = models.DecimalField(max_digits=10, decimal_places=2)
-    currency = models.CharField(max_length=3, default='USD')
-    features = models.JSONField(default=list, help_text="List of features")
-    is_active = models.BooleanField(default=True)
-    recommended = models.BooleanField(default=False)
-    
-    # Limits
-    user_limit = models.IntegerField(default=1)
-    board_limit = models.IntegerField(default=3)
-    automation_limit = models.IntegerField(default=100)
-
     def __str__(self):
-        return self.name
+        return self.title

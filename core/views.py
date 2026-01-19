@@ -21,6 +21,12 @@ def signup_view(request):
         form = SignUpForm(request.POST)
         if form.is_valid():
             user = form.save()
+            
+            # Create default Organization and Membership
+            from core.models import Organization, Membership
+            org = Organization.objects.create(name=f"{user.username}'s Team", owner=user)
+            Membership.objects.create(user=user, organization=org, role='admin')
+            
             login(request, user, backend='core.backends.EmailBackend')
             return redirect('dashboard')
     else:

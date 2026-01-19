@@ -12,5 +12,9 @@ urlpatterns = [
     path('board/<int:board_id>/kanban/', views.kanban_view, name='board_kanban'),
     path('board/<int:board_id>/calendar/', views.calendar_view, name='board_calendar'),
     path('api/update-order/', views.update_item_order, name='update_item_order'),
+    path('item/<int:item_id>/details/', views.get_item_details, name='get_item_details'),
+    path('item/<int:item_id>/update/post/', views.post_item_update, name='post_item_update'),
+    path('board/<int:board_id>/add_column/', views.add_column, name='add_column'),
+    path('board/<int:board_id>/add_group/', views.add_group, name='add_group'),
 ]
 

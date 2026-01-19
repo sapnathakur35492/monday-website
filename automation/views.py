@@ -1,4 +1,5 @@
 from django.shortcuts import render, redirect, get_object_or_404
+from django.contrib.auth.decorators import login_required
 from webapp.models import Board
 from .models import AutomationRule, TriggerType, ActionType
 
@@ -7,6 +8,7 @@ def automation_list(request, board_id):
     rules = board.automations.all()
     return render(request, 'automation/list.html', {'board': board, 'rules': rules})
 
+@login_required
 def create_rule(request, board_id):
     board = get_object_or_404(Board, id=board_id)
     

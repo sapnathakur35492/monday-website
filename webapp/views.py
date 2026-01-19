@@ -31,6 +31,11 @@ def board_detail(request, board_id):
     """
     board = get_object_or_404(Board, id=board_id)
     
+    # Permission Check
+    if not check_board_access(request.user, board):
+        from django.core.exceptions import PermissionDenied
+        raise PermissionDenied("You do not have access to this board's workspace.")
+    
     # Simple Search logic
     search_query = request.GET.get('search', '').strip()
     
@@ -50,8 +55,22 @@ def board_detail(request, board_id):
         context['board'] = board
 
     context['columns'] = board.columns.all()
+    
+    # Get Organization Users for "Person" column
+    # Assuming board -> workspace -> organization
+    org = board.workspace.organization
+    context['users'] = org.memberships.select_related('user').all()
+    
     return render(request, 'webapp/board_detail.html', context)
-    # return render(request, 'webapp/board_detail_debug.html', context)
+
+def check_board_access(user, board):
+    """
+    Verifies if user has access to the board via Organization membership.
+    """
+    if board.workspace.organization.memberships.filter(user=user).exists():
+        return True
+    return False
+
 
 @require_POST
 def add_item(request, group_id):
@@ -59,6 +78,10 @@ def add_item(request, group_id):
     HTMX: Adds an item to a group and returns the row HTML.
     """
     group = get_object_or_404(Group, id=group_id)
+    
+    if not verify_edit_permission(request.user, group.board):
+        return JsonResponse({'error': 'Permission Denied'}, status=403)
+        
     name = request.POST.get('name', '').strip()
     if not name:
         # Return nothing or error if empty name (Basic validation)
@@ -73,28 +96,49 @@ def add_item(request, group_id):
     
     return render(request, 'webapp/partials/item_row.html', {'item': item, 'columns': columns})
 
+def verify_edit_permission(user, board):
+    """
+    Checks if user is Admin or Member (Permissions to edit).
+    Viewers cannot edit.
+    """
+    membership = board.workspace.organization.memberships.filter(user=user).first()
+    if membership and membership.role in ['admin', 'member']:
+        return True
+    return False
+
 @require_POST
 def update_status(request, item_id, col_id):
     """
     Cycles status on click. HTMX. Now 100% DYNAMIC!
     """
     item = get_object_or_404(Item, id=item_id)
+    
+    # Permission Check
+    if not verify_edit_permission(request.user, item.group.board):
+        return JsonResponse({'error': 'Permission Denied'}, status=403)
+        
+    column = get_object_or_404(Column, id=col_id)
+    
+    # ... logic continues ...
     column = get_object_or_404(Column, id=col_id)
     
     # Get dynamic status options from column
     status_options = get_status_options(column)
     
-    # Get current value
-    current_val = item.values.get(str(col_id), status_options[0] if status_options else '')
+    # Check if a specific value was requested (Dropdown selection)
+    requested_val = request.POST.get('action_value')
     
-    # Cycle to next status
-    try:
-        current_index = status_options.index(current_val)
-        next_index = (current_index + 1) % len(status_options)
-        new_val = status_options[next_index]
-    except (ValueError, IndexError):
-        # If current value not in list or list is empty, use first option
-        new_val = status_options[0] if status_options else current_val
+    if requested_val:
+        new_val = requested_val
+    else:
+        # Cycle to next status (Legacy/Cycle click)
+        current_val = item.values.get(str(col_id), status_options[0] if status_options else '')
+        try:
+            current_index = status_options.index(current_val)
+            next_index = (current_index + 1) % len(status_options)
+            new_val = status_options[next_index]
+        except (ValueError, IndexError):
+            new_val = status_options[0] if status_options else current_val
     
     item.values[str(col_id)] = new_val
     item.save()
@@ -148,16 +192,40 @@ def update_item_order(request):
     
     item_id = data.get('itemId')
     new_status = data.get('newStatus')
-    
+    new_position = data.get('newPosition')
+    new_group_id = data.get('newGroupId')
+
     item = get_object_or_404(Item, id=item_id)
     
+    # Permission Check
+    if not verify_edit_permission(request.user, item.group.board):
+        return JsonResponse({'error': 'Permission Denied'}, status=403)
+
+    # 1. Handle Status Change
     if new_status:
-        # Find status column again
         status_column = item.group.board.columns.filter(type='status').first()
         if status_column:
             item.values[str(status_column.id)] = new_status
             item.save()
-            
+
+    # 2. Handle Reordering (Position / Group Change)
+    if new_position is not None:
+        # If group changed
+        if new_group_id:
+            try:
+                new_group = Group.objects.get(id=new_group_id)
+                item.group = new_group
+            except Group.DoesNotExist:
+                pass
+        
+        # Update position
+        # In a real app, we would shift other items' positions. 
+        # For this MVP, we will rely on flex/sort order or simple overwrite.
+        # A robust way is to use a library like django-ordered-model.
+        # Here we just update the specific item's position.
+        item.position = int(new_position)
+        item.save()
+
     return JsonResponse({'status': 'success'})
 
 def calendar_view(request, board_id):
@@ -201,12 +269,44 @@ def my_work_view(request):
     This is different from dashboard which shows all workspaces.
     """
     # Get items created by user
-    my_items = Item.objects.filter(
-        created_by=request.user
-    ).select_related('group__board__workspace').order_by('-created_at')[:50]
+    # 1. Created by User
+    created_items = Item.objects.filter(created_by=request.user).select_related('group__board__workspace')
     
+    # 2. Assigned to User
+    from django.db.models import Q
+    
+    # Find all "person" columns
+    person_cols = Column.objects.filter(type='person')
+    
+    # Build query: For each column, check if its ID is in values with the username
+    # JSONField filtering: values__<col_id> = username. 
+    # Since keys are strings of IDs, we can construct filters.
+    
+    assigned_items = []
+    # Fetch all items that rely on person columns to limit DB hits slightly
+    # Ideally, we would filter by board/person cols first, but for MVP:
+    # Get all items connected to board columns of type 'person'
+    candidate_items = Item.objects.filter(group__board__columns__in=person_cols).distinct()
+    
+    username = request.user.username
+    
+    for item in candidate_items:
+        # Check values manually
+        # values is a dict {col_id: username}
+        for col in person_cols:
+            col_id_str = str(col.id)
+            if item.values.get(col_id_str) == username:
+                assigned_items.append(item)
+                break # Sent for this item
+
+        
+    # Merge and Deduplicate
+    all_items = list(created_items) + assigned_items
+    # Sort by created_at desc
+    all_items.sort(key=lambda x: x.created_at, reverse=True)
+     
     return render(request, 'webapp/my_work.html', {
-        'items': my_items
+        'items': all_items[:50] # Limit to recent 50
     })
 
 @login_required
@@ -231,6 +331,10 @@ def create_workspace(request):
                 name=f"{request.user.username}'s Organization",
                 owner=request.user
             )
+        
+        # Ensure owner is a member (Fix for existing users)
+        from core.models import Membership
+        Membership.objects.get_or_create(user=request.user, organization=org, defaults={'role': 'admin'})
         
         workspace = Workspace.objects.create(
             name=name,
@@ -314,3 +418,110 @@ def create_board(request, workspace_id):
         return redirect('board_detail', board_id=board.id)
     
     return render(request, 'webapp/create_board.html', {'workspace': workspace})
+
+@login_required
+def get_item_details(request, item_id):
+    """
+    Returns the Side Panel HTML for an item.
+    """
+    item = get_object_or_404(Item, id=item_id)
+    updates = item.updates.all()
+    # If using HTMX to just load the content
+    return render(request, 'webapp/partials/side_panel.html', {'item': item, 'updates': updates})
+
+@require_POST
+@login_required
+def post_item_update(request, item_id):
+    """
+    HTMX: Posts a new update/comment to an item.
+    """
+    item = get_object_or_404(Item, id=item_id)
+    body = request.POST.get('body', '').strip()
+    
+    if body:
+        from .models import ItemUpdate
+        update = ItemUpdate.objects.create(
+            item=item,
+            user=request.user,
+            body=body
+        )
+        return render(request, 'webapp/partials/update_card.html', {'update': update})
+    
+    return JsonResponse({})
+
+@require_POST
+@login_required
+def add_column(request, board_id):
+    """
+    HTMX: Adds a new column to the board dynamically.
+    """
+    board = get_object_or_404(Board, id=board_id)
+    title = request.POST.get('title', 'New Column')
+    
+    # Calculate position (last + 1)
+    last_pos = board.columns.last().position if board.columns.exists() else 0
+    
+    # Determine type based on title for demo smarts, or just default to text
+    col_type = 'text'
+    if 'date' in title.lower(): col_type = 'date'
+    elif 'status' in title.lower(): col_type = 'status'
+    elif 'person' in title.lower(): col_type = 'person'
+    elif 'number' in title.lower(): col_type = 'number'
+    elif 'priority' in title.lower(): col_type = 'priority'
+    
+    # Allow override via POST if we had a proper form (we will assume simple prompt for now)
+    if request.POST.get('type'):
+        col_type = request.POST.get('type')
+
+    column = Column.objects.create(
+        board=board,
+        title=title,
+        type=col_type,
+        position=last_pos + 1,
+        settings={} 
+    )
+    
+    # Return success signal for page reload
+    response = JsonResponse({'status': 'success'})
+    response['HX-Refresh'] = 'true'
+    return response
+
+@require_POST
+@login_required
+def add_group(request, board_id):
+    """
+    Adds a new group to the board.
+    """
+    board = get_object_or_404(Board, id=board_id)
+    title = request.POST.get('title', 'New Group')
+    
+    # Calculate position
+    last_pos = board.groups.last().position if board.groups.exists() else 0
+    
+    Group.objects.create(
+        board=board,
+        title=title,
+        color='#579bfc', # Default blue
+        position=last_pos + 1
+    )
+    
+    # Refresh page to show new group (simplest for now)
+    return redirect('board_detail', board_id=board.id)
+
+@require_POST
+@login_required
+def add_column(request, board_id):
+    board = get_object_or_404(Board, id=board_id)
+    if not verify_edit_permission(request.user, board):
+        from django.core.exceptions import PermissionDenied
+        raise PermissionDenied
+    col_type = request.POST.get('type')
+    title = request.POST.get('title', col_type.capitalize())
+    position = board.columns.count()
+    settings = {}
+    if col_type == 'status':
+        settings['choices'] = ['Done', 'Working on it', 'Stuck', 'Not Started']
+    elif col_type == 'priority':
+        settings['choices'] = ['High', 'Medium', 'Low']
+    Column.objects.create(board=board, title=title, type=col_type, position=position, settings=settings)
+    return redirect('board_detail', board_id=board.id)

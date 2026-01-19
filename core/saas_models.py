@@ -1,6 +1,16 @@
 from django.db import models
 from .models import User, Organization
 
+class PricingPlan(models.Model):
+    name = models.CharField(max_length=100)
+    price = models.DecimalField(max_digits=10, decimal_places=2)
+    features = models.JSONField(default=list, help_text="List of features")
+    is_popular = models.BooleanField(default=False)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return self.name
+
 class RolePermission(models.Model):
     """
     Dynamic permissions for each role.

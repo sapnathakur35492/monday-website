@@ -94,6 +94,8 @@
     document.addEventListener('DOMContentLoaded', () => {
         const columns = document.querySelectorAll('.kanban-col');
 
+        const csrfToken = '{{ csrf_token }}';
+
         columns.forEach(col => {
             new Sortable(col, {
                 group: 'kanban', // set both lists to same group
@@ -103,14 +105,34 @@
                     const itemEl = evt.item;
                     const newStatus = evt.to.dataset.status;
                     const itemId = itemEl.dataset.id;
+                    const oldStatus = evt.from.dataset.status;
 
-                    // Allow moving between columns (Status Change)
-                    // We need an endpoint to handle Drag & Drop status updates + reordering
-                    console.log(`Moved item ${itemId} to status ${newStatus}`);
+                    if (newStatus === oldStatus) return; // No change
 
-                    // Simple HTMX or Fetch call to update
-                    // Ideally we should use hx-post but for SortableJS generic integration verify manually first
-                    // For now, let's assume we implement 'update_item_order' to handle this.
+                    // Optimistic update done by SortableJS visually.
+                    // Now sync with Backend
+                    fetch('{% url "update_item_order" %}', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRFToken': csrfToken
+                        },
+                        body: JSON.stringify({
+                            itemId: itemId,
+                            newStatus: newStatus
+                        })
+                    })
+                        .then(response => response.json())
+                        .then(data => {
+                            console.log('Update success:', data);
+                            if (newStatus === 'Done') {
+                                try { confetti({ particleCount: 100, spread: 70, origin: { y: 0.6 } }); } catch (e) { }
+                            }
+                        })
+                        .catch(error => {
+                            console.error('Error updating order:', error);
+                            // Ideally revert move on error, but simple logging for now
+                        });
                 }
             });
         });

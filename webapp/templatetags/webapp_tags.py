@@ -11,3 +11,13 @@ def get_value(dictionary, key):
     if not dictionary:
         return ""
     return dictionary.get(str(key), "")
+
+@register.filter
+def make_list(value):
+    """
+    Converts a comma-separated string into a list.
+    Usage: {{ "A,B,C"|make_list }}
+    """
+    if not value:
+        return []
+    return [x.strip() for x in value.split(',')]

@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% load static %}
 
 {% block extra_head %}
 <!-- AOS Library -->
@@ -9,51 +10,194 @@
         AOS.init({
             duration: 800,
             once: true,
+            offset: 50,
         });
     });
 </script>
 {% endblock %}
 
 {% block content %}
-<div class="relative overflow-hidden bg-white">
+<div class="relative overflow-hidden bg-slate-50">
+
+    <!-- Background Elements -->
+    <div
+        class="absolute top-0 -left-4 w-72 h-72 bg-purple-300 rounded-full mix-blend-multiply filter blur-xl opacity-70 animate-blob">
+    </div>
+    <div
+        class="absolute top-0 -right-4 w-72 h-72 bg-yellow-300 rounded-full mix-blend-multiply filter blur-xl opacity-70 animate-blob animation-delay-2000">
+    </div>
+    <div
+        class="absolute -bottom-8 left-20 w-72 h-72 bg-pink-300 rounded-full mix-blend-multiply filter blur-xl opacity-70 animate-blob animation-delay-4000">
+    </div>
+
     <!-- Hero Section -->
-    <div class="mx-auto max-w-7xl px-6 pb-24 pt-10 sm:pb-32 lg:flex lg:px-8 lg:py-40">
-        <div class="mx-auto max-w-2xl lg:mx-0 lg:max-w-xl lg:flex-shrink-0 lg:pt-8" data-aos="fade-up">
-            <h1 class="mt-10 text-4xl font-bold tracking-tight text-gray-900 sm:text-6xl">
-                {{ page.title|default:"ProjectFlow: Work Without Limits" }}
-            </h1>
-            <p class="mt-6 text-lg leading-8 text-gray-600" data-aos="fade-up" data-aos-delay="100">
-                {{ page.content|default:"The OS for your work. Plan, manage, and automate your projects."|safe }}
-            </p>
-            <div class="mt-10 flex items-center gap-x-6" data-aos="fade-up" data-aos-delay="200">
-                <a href="{% url 'signup' %}"
-                    class="rounded-full bg-indigo-600 px-6 py-3 text-sm font-semibold text-white shadow-lg shadow-indigo-500/30 hover:bg-indigo-500 transition-all hover:-translate-y-1">Get
-                    Started</a>
-                <a href="#" class="text-sm font-semibold leading-6 text-gray-900 flex items-center gap-1 group">
-                    Live demo <span aria-hidden="true" class="group-hover:translate-x-1 transition-transform">→</span>
-                </a>
-            </div>
-        </div>
-        <!-- Visual -->
-        <div class="mx-auto mt-16 flex max-w-2xl sm:mt-24 lg:ml-10 lg:mt-0 lg:mr-0 lg:max-w-none lg:flex-none xl:ml-32"
-            data-aos="fade-left" data-aos-duration="1000">
-            <div class="max-w-3xl flex-none sm:max-w-5xl lg:max-w-none">
-                <div
-                    class="rounded-xl bg-gray-900/5 p-2 ring-1 ring-inset ring-gray-900/10 lg:rounded-2xl lg:p-4 hover:scale-[1.01] transition-transform duration-500">
-                    <div
-                        class="rounded-lg bg-gradient-to-br from-indigo-500 via-purple-500 to-pink-500 shadow-2xl ring-1 ring-gray-900/10 overflow-hidden p-1">
-                        <div class="bg-white rounded h-64 flex items-center justify-center">
-                            <!-- Placeholder UI -->
-                            <div class="space-y-4 w-3/4 animate-pulse">
-                                <div class="h-4 bg-slate-200 rounded w-3/4"></div>
-                                <div class="h-4 bg-slate-200 rounded"></div>
-                                <div class="h-4 bg-slate-200 rounded w-5/6"></div>
+    <div class="relative pt-24 pb-16 sm:pt-32 lg:pb-32 overflow-hidden">
+        <div class="mx-auto max-w-7xl px-6 lg:px-8">
+            <div class="lg:grid lg:grid-cols-12 lg:gap-8">
+                <!-- Hero Content -->
+                <div class="lg:col-span-5 text-center lg:text-left z-10 flex flex-col justify-center"
+                    data-aos="fade-right">
+                    <h1 class="text-4xl font-extrabold tracking-tight text-slate-900 sm:text-6xl mb-6">
+                        <span class="block">Work without</span>
+                        <span class="block text-gradient">limits.</span>
+                    </h1>
+                    <p class="mt-4 text-lg text-slate-600 leading-relaxed mb-8">
+                        The platform where teams plan, execute, and scale their work. Automate the mundane, and focus on
+                        what matters.
+                    </p>
+                    <div class="flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-4">
+                        <a href="{% url 'signup' %}"
+                            class="w-full sm:w-auto px-8 py-4 bg-gradient-primary rounded-full text-white font-bold text-lg shadow-lg shadow-indigo-500/30 hover:shadow-xl hover:shadow-indigo-500/40 transition-all hover:-translate-y-1 text-center">
+                            Get Started Free
+                        </a>
+                        <a href="#"
+                            class="w-full sm:w-auto px-8 py-4 bg-white text-slate-700 hover:text-indigo-600 font-semibold rounded-full border border-slate-200 hover:border-indigo-100 shadow-sm hover:shadow-md transition-all text-center">
+                            See Pricing
+                        </a>
+                    </div>
+                    <div class="mt-8 flex items-center justify-center lg:justify-start gap-4 text-sm text-slate-500">
+                        <span class="flex items-center gap-1">
+                            <svg class="w-5 h-5 text-green-500" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd"
+                                    d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                                    clip-rule="evenodd" />
+                            </svg>
+                            No credit card
+                        </span>
+                        <span class="flex items-center gap-1">
+                            <svg class="w-5 h-5 text-green-500" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd"
+                                    d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                                    clip-rule="evenodd" />
+                            </svg>
+                            Unlimited users (Free plan)
+                        </span>
+                    </div>
+                </div>
+
+                <!-- Hero Image -->
+                <div class="lg:col-span-7 mt-16 lg:mt-0 relative z-10" data-aos="fade-left" data-aos-delay="200">
+                    <!-- 3D Effect Container -->
+                    <div class="relative w-full max-w-lg mx-auto lg:max-w-none animate-float">
+                        <div
+                            class="relative rounded-2xl p-2 bg-gradient-to-tr from-white/40 to-white/10 glass-panel shadow-2xl">
+                            <img src="{% static 'images/hero_dashboard.png' %}" alt="App Dashboard"
+                                class="w-full h-auto rounded-xl shadow-inner border border-white/50">
+
+                            <!-- Floating Elements -->
+                            <div
+                                class="absolute -right-8 top-20 bg-white rounded-lg p-4 shadow-xl glass-panel animate-pulse-soft hidden md:block">
+                                <div class="flex items-center gap-3">
+                                    <div
+                                        class="w-10 h-10 rounded-full bg-green-100 flex items-center justify-center text-green-600 font-bold">
+                                        ✓</div>
+                                    <div>
+                                        <div class="text-xs text-slate-500">Status Update</div>
+                                        <div class="font-bold text-slate-800">Project Launch: Done</div>
+                                    </div>
+                                </div>
                             </div>
+
+                            <div class="absolute -left-6 bottom-12 bg-white rounded-lg p-4 shadow-xl glass-panel hidden md:block"
+                                data-aos="fade-up" data-aos-delay="500">
+                                <div class="flex items-center gap-3">
+                                    <div class="flex -space-x-2">
+                                        <div class="w-8 h-8 rounded-full bg-blue-500 border-2 border-white"></div>
+                                        <div class="w-8 h-8 rounded-full bg-purple-500 border-2 border-white"></div>
+                                        <div class="w-8 h-8 rounded-full bg-pink-500 border-2 border-white"></div>
+                                    </div>
+                                    <div class="font-medium text-slate-700 text-sm">3 Members added</div>
+                                </div>
+                            </div>
+
                         </div>
                     </div>
                 </div>
             </div>
         </div>
     </div>
+
+    <!-- Features Grid -->
+    <div class="py-24 bg-white relative">
+        <div class="mx-auto max-w-7xl px-6 lg:px-8">
+            <div class="mx-auto max-w-2xl text-center mb-16" data-aos="fade-up">
+                <h2 class="text-base font-semibold leading-7 text-indigo-600">Everything you need</h2>
+                <p class="mt-2 text-3xl font-bold tracking-tight text-slate-900 sm:text-4xl">Streamline your workflow
+                </p>
+                <p class="mt-6 text-lg leading-8 text-slate-600">
+                    ProjectFlow adapts to your needs. It's as simple as a spreadsheet, but powerful enough to run your
+                    entire company.
+                </p>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                <!-- Card 1 -->
+                <div class="rounded-3xl bg-slate-50 p-8 hover:shadow-xl transition-all hover:-translate-y-2 border border-slate-100 group"
+                    data-aos="fade-up" data-aos-delay="100">
+                    <div
+                        class="mb-6 h-48 overflow-hidden rounded-2xl bg-white border border-slate-100 flex items-center justify-center relative">
+                        <img src="{% static 'images/feature_kanban.png' %}" alt="Kanban"
+                            class="object-cover h-full w-full group-hover:scale-105 transition-transform duration-500">
+                    </div>
+                    <h3 class="text-xl font-bold text-slate-900 mb-3">Visual Boards</h3>
+                    <p class="text-slate-600">
+                        Visualize work with Kanban, Gantt, and Calendar views. Switch instantly to see the big picture.
+                    </p>
+                </div>
+
+                <!-- Card 2 -->
+                <div class="rounded-3xl bg-slate-50 p-8 hover:shadow-xl transition-all hover:-translate-y-2 border border-slate-100 group"
+                    data-aos="fade-up" data-aos-delay="200">
+                    <div
+                        class="mb-6 h-48 overflow-hidden rounded-2xl bg-white border border-slate-100 flex items-center justify-center relative">
+                        <img src="{% static 'images/feature_automation.png' %}" alt="Automation"
+                            class="object-cover h-full w-full group-hover:scale-105 transition-transform duration-500">
+                    </div>
+                    <h3 class="text-xl font-bold text-slate-900 mb-3">Code-free Automation</h3>
+                    <p class="text-slate-600">
+                        "If this, then that." Automate repetitive tasks in seconds so you can focus on creative work.
+                    </p>
+                </div>
+
+                <!-- Card 3 -->
+                <div class="rounded-3xl bg-slate-50 p-8 hover:shadow-xl transition-all hover:-translate-y-2 border border-slate-100 group"
+                    data-aos="fade-up" data-aos-delay="300">
+                    <div
+                        class="mb-6 h-48 overflow-hidden rounded-2xl bg-gradient-to-br from-indigo-50 to-purple-50 flex items-center justify-center">
+                        <svg class="w-20 h-20 text-indigo-400 group-hover:scale-110 transition-transform" fill="none"
+                            viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
+                                d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                        </svg>
+                    </div>
+                    <h3 class="text-xl font-bold text-slate-900 mb-3">Dashboards & Reporting</h3>
+                    <p class="text-slate-600">
+                        Get real-time insights into your team's progress. Customizable widgets for high-level overviews.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- CTA Section -->
+    <div class="bg-indigo-900 py-24 relative overflow-hidden">
+        <div class="absolute inset-0 opacity-20 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')]">
+        </div>
+        <div class="mx-auto max-w-7xl px-6 lg:px-8 relative z-10 text-center">
+            <h2 class="text-3xl font-bold tracking-tight text-white sm:text-4xl mb-6">
+                Ready to boost your team's productivity?
+            </h2>
+            <p class="mx-auto max-w-2xl text-lg leading-8 text-indigo-200 mb-10">
+                Join thousands of teams who manage their work with ProjectFlow. No credit card required.
+            </p>
+            <div class="flex items-center justify-center gap-x-6">
+                <a href="{% url 'signup' %}"
+                    class="rounded-full bg-white px-8 py-3.5 text-sm font-semibold text-indigo-900 shadow-sm hover:bg-indigo-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white transition-all hover:scale-105">
+                    Start Your Free Trial
+                </a>
+            </div>
+        </div>
+    </div>
+
 </div>
 {% endblock %}

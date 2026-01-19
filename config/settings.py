@@ -24,8 +24,14 @@ SECRET_KEY = 'django-insecure-x6wm!3=5jvh1$3bjy80**jduvc4ou96ij8+-p@5lu=5kt9w)o0
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
+ALLOWED_HOSTS = [
+    '89.116.228.249',
+    'amjim.com',
+    'www.amjim.com',
+    'localhost',
+    '127.0.0.1',
+]
 
-ALLOWED_HOSTS = []
 
 
 # Application definition
@@ -141,6 +147,14 @@ MEDIA_ROOT = BASE_DIR / 'media'
 # Custom User Model
 AUTH_USER_MODEL = 'core.User'
 
+
+
+# Email Backend (Console for dev)
+EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
+STATIC_URL = '/static/'
+STATIC_ROOT = '/var/www/amjim/static'
+
 # Default primary key field type
 # https://docs.djangoproject.com/en/4.2/ref/settings/#default-auto-field
 
@@ -153,5 +167,11 @@ CELERY_RESULT_SERIALIZER = 'json'
 CELERY_TIMEZONE = TIME_ZONE
 CELERY_TASK_ALWAYS_EAGER = True # Force sync execution for Windows Dev
 
-# Email Backend (Console for dev)
-EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+# Email Backend (SMTP for Real Emails)
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_HOST = 'smtp.gmail.com'
+EMAIL_PORT = 587
+EMAIL_USE_TLS = True
+EMAIL_HOST_USER = 'santoshatter199871@gmail.com'
+EMAIL_HOST_PASSWORD = 'zpczqnnhigdkzcfr'  # App Password (spaces removed)
+DEFAULT_FROM_EMAIL = 'ProjectFlow <santoshatter199871@gmail.com>'

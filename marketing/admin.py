@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import Page, PricingPlan, Feature
+from .models import Page, Feature
 
 @admin.register(Feature)
 class FeatureAdmin(admin.ModelAdmin):
@@ -12,6 +12,4 @@ class PageAdmin(admin.ModelAdmin):
     list_display = ('title', 'slug', 'is_published', 'updated_at')
     prepopulated_fields = {'slug': ('title',)}
 
-@admin.register(PricingPlan)
-class PricingPlanAdmin(admin.ModelAdmin):
-    list_display = ('name', 'price', 'is_active', 'user_limit')
+

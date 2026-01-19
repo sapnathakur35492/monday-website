@@ -101,3 +101,21 @@ class Item(models.Model):
 
     def __str__(self):
         return self.name
+
+class ItemUpdate(models.Model):
+    """
+    Updates/Comments on an item (The 'Pulse').
+    """
+    item = models.ForeignKey(Item, on_delete=models.CASCADE, related_name='updates')
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    body = models.TextField()
+    created_at = models.DateTimeField(auto_now_add=True)
+    
+    # Optional: Liked by functionality for 'Monday' feel
+    liked_by = models.ManyToManyField(settings.AUTH_USER_MODEL, related_name='liked_updates', blank=True)
+
+    class Meta:
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return f"{self.user.username} on {self.item.name}"
