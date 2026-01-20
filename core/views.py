@@ -24,8 +24,27 @@ def signup_view(request):
             
             # Create default Organization and Membership
             from core.models import Organization, Membership
+            from webapp.models import Workspace, Board, Group, Column, Item
+            
             org = Organization.objects.create(name=f"{user.username}'s Team", owner=user)
             Membership.objects.create(user=user, organization=org, role='admin')
+            
+            # Create Default Workspace & Board
+            ws = Workspace.objects.create(organization=org, name="Main Workspace")
+            board = Board.objects.create(workspace=ws, name="My First Board", description="Welcome to ProjectFlow!")
+            
+            # Default Group
+            group = Group.objects.create(board=board, title="Things to do", color="#6366f1", position=0)
+            Group.objects.create(board=board, title="Done", color="#22c55e", position=1)
+            
+            # Default Columns
+            Column.objects.create(board=board, title="Status", type="status", position=0, settings={'choices': ['Done', 'Working on it', 'Stuck', 'Not Started']})
+            Column.objects.create(board=board, title="Person", type="person", position=1)
+            Column.objects.create(board=board, title="Date", type="date", position=2)
+            
+            # Default Item
+            Item.objects.create(group=group, name="Explore ProjectFlow", created_by=user)
+            Item.objects.create(group=group, name="Invite team members", created_by=user)
             
             login(request, user, backend='core.backends.EmailBackend')
             return redirect('dashboard')
