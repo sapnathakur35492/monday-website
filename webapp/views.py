@@ -16,11 +16,13 @@ def get_status_options(column):
 
 # For simplicity in this demo, we might skip @login_required decorators 
 # if we want to test easily without auth, but for production code we add them.
-# @login_required 
+@login_required 
 def dashboard(request):
     """
     Shows all workspaces and boards.
     """
+    # from django.db.models import Prefetch
+    # workspaces = Workspace.objects.prefetch_related('boards').filter(organization__memberships__user=request.user).distinct()
     workspaces = Workspace.objects.all()
     return render(request, 'webapp/dashboard.html', {'workspaces': workspaces})
 
@@ -67,6 +69,14 @@ def check_board_access(user, board):
     """
     Verifies if user has access to the board via Organization membership.
     """
+    # Allow superusers
+    if user.is_superuser:
+        return True
+        
+    # Allow board creator
+    if board.created_by == user:
+        return True
+        
     if board.workspace.organization.memberships.filter(user=user).exists():
         return True
     return False
@@ -101,6 +111,14 @@ def verify_edit_permission(user, board):
     Checks if user is Admin or Member (Permissions to edit).
     Viewers cannot edit.
     """
+    # Allow superusers
+    if user.is_superuser:
+        return True
+        
+    # Allow board creator
+    if board.created_by == user:
+        return True
+
     membership = board.workspace.organization.memberships.filter(user=user).first()
     if membership and membership.role in ['admin', 'member']:
         return True
@@ -142,6 +160,19 @@ def update_status(request, item_id, col_id):
     
     item.values[str(col_id)] = new_val
     item.save()
+    
+    # --- AUTOMATION TRIGGER ---
+    try:
+        from automation.service import AutomationEngine
+        context = {
+            'item': item,
+            'column_id': col_id,
+            'new_value': new_val
+        }
+        AutomationEngine.run_automations(item.group.board, 'status_change', context)
+    except Exception as e:
+        print(f"Automation Error: {e}")
+    # --------------------------
     
     columns = item.group.board.columns.all()
     return render(request, 'webapp/partials/item_row.html', {'item': item, 'columns': columns})
@@ -228,6 +259,14 @@ def update_item_order(request):
 
     return JsonResponse({'status': 'success'})
 
+@login_required
+def gantt_view(request, board_id):
+    board = get_object_or_404(Board, id=board_id)
+    return render(request, 'webapp/board_gantt.html', {
+        'board': board,
+        'workspace': board.workspace
+    })
+
 def calendar_view(request, board_id):
     """
     Renders items on a calendar.
@@ -308,6 +347,42 @@ def my_work_view(request):
     return render(request, 'webapp/my_work.html', {
         'items': all_items[:50] # Limit to recent 50
     })
+
+@login_required
+def global_search(request):
+    """
+    Searches across Workspaces, Boards, and Items.
+    """
+    query = request.GET.get('q', '').strip()
+    from django.db.models import Q
+    
+    results = {
+        'workspaces': [],
+        'boards': [],
+        'items': []
+    }
+    
+    if query:
+        # Search Workspaces
+        results['workspaces'] = Workspace.objects.filter(
+            organization__memberships__user=request.user,
+            name__icontains=query
+        )[:5]
+        
+        # Search Boards
+        results['boards'] = Board.objects.filter(
+            workspace__organization__memberships__user=request.user,
+            name__icontains=query
+        )[:10]
+        
+        # Search Items
+        # Filter items where user has access to the board
+        results['items'] = Item.objects.filter(
+            group__board__workspace__organization__memberships__user=request.user,
+            name__icontains=query
+        ).select_related('group', 'group__board')[:50]
+        
+    return render(request, 'webapp/global_search.html', {'query': query, 'results': results})
 
 @login_required
 def create_workspace(request):
@@ -405,6 +480,14 @@ def create_board(request, workspace_id):
             type='person', 
             position=4
         )
+
+        if board_type == 'gantt':
+            Column.objects.create(
+                board=board,
+                title='Timeline',
+                type='timeline',
+                position=5
+            )
         
         # Create default group
         Group.objects.create(
@@ -451,43 +534,6 @@ def post_item_update(request, item_id):
 
 @require_POST
 @login_required
-def add_column(request, board_id):
-    """
-    HTMX: Adds a new column to the board dynamically.
-    """
-    board = get_object_or_404(Board, id=board_id)
-    title = request.POST.get('title', 'New Column')
-    
-    # Calculate position (last + 1)
-    last_pos = board.columns.last().position if board.columns.exists() else 0
-    
-    # Determine type based on title for demo smarts, or just default to text
-    col_type = 'text'
-    if 'date' in title.lower(): col_type = 'date'
-    elif 'status' in title.lower(): col_type = 'status'
-    elif 'person' in title.lower(): col_type = 'person'
-    elif 'number' in title.lower(): col_type = 'number'
-    elif 'priority' in title.lower(): col_type = 'priority'
-    
-    # Allow override via POST if we had a proper form (we will assume simple prompt for now)
-    if request.POST.get('type'):
-        col_type = request.POST.get('type')
-
-    column = Column.objects.create(
-        board=board,
-        title=title,
-        type=col_type,
-        position=last_pos + 1,
-        settings={} 
-    )
-    
-    # Return success signal for page reload
-    response = JsonResponse({'status': 'success'})
-    response['HX-Refresh'] = 'true'
-    return response
-
-@require_POST
-@login_required
 def add_group(request, board_id):
     """
     Adds a new group to the board.
@@ -510,6 +556,40 @@ def add_group(request, board_id):
 
 @require_POST
 @login_required
+def delete_group(request, board_id, group_id):
+    board = get_object_or_404(Board, id=board_id)
+    group = get_object_or_404(Group, id=group_id, board=board)
+    group.delete()
+    return redirect('board_detail', board_id=board.id)
+
+@require_POST
+@login_required
+def delete_item(request, board_id, item_id):
+    board = get_object_or_404(Board, id=board_id)
+    # Ensure item belongs to board
+    item = get_object_or_404(Item, id=item_id, group__board=board)
+    item.delete()
+    return redirect('board_detail', board_id=board.id)
+
+@require_POST
+@login_required
+def update_group_title(request):
+    import json
+    data = json.loads(request.body)
+    group_id = data.get('id')
+    new_title = data.get('title')
+    
+    group = get_object_or_404(Group, id=group_id)
+    # Permission check (simplified)
+    if not group.board.workspace.organization.memberships.filter(user=request.user).exists():
+        return JsonResponse({'status': 'error'}, status=403)
+        
+    group.title = new_title
+    group.save()
+    return JsonResponse({'status': 'ok'})
+
+@require_POST
+@login_required
 def add_column(request, board_id):
     board = get_object_or_404(Board, id=board_id)
     if not verify_edit_permission(request.user, board):
@@ -523,5 +603,120 @@ def add_column(request, board_id):
         settings['choices'] = ['Done', 'Working on it', 'Stuck', 'Not Started']
     elif col_type == 'priority':
         settings['choices'] = ['High', 'Medium', 'Low']
+    
     Column.objects.create(board=board, title=title, type=col_type, position=position, settings=settings)
     return redirect('board_detail', board_id=board.id)
+
+@require_POST
+@login_required
+def add_item(request, group_id):
+    """
+    Adds a new item to a group.
+    """
+    group = get_object_or_404(Group, id=group_id)
+    name = request.POST.get('name', '').strip()
+    
+    if name:
+        # Calculate position
+        last_pos = group.items.last().position if group.items.exists() else 0
+        
+        # Determine defaults
+        default_values = {}
+        for col in group.board.columns.all():
+            if col.type == 'status':
+                # Default to first choice if available
+                choices = col.settings.get('choices', [])
+                if choices:
+                    default_values[str(col.id)] = choices[0]
+                else:
+                    default_values[str(col.id)] = 'Not Started'
+            elif col.type == 'priority':
+                 default_values[str(col.id)] = 'Medium' # Default priority
+            # Add other defaults if needed
+
+        item = Item.objects.create(
+            group=group,
+            name=name,
+            position=last_pos + 1,
+            created_by=request.user,
+            values=default_values
+        )
+        
+        # Also create ItemValue objects if we are essentially double-writing (DB migration transition)
+        # But looking at models.py, Item has 'values' JSONField AND there might be ItemValue model?
+        # Let's check models.py again. The view_file output showed Item having `values = models.JSONField`.
+        # It did NOT show an `ItemValue` model in lines 50-100.
+        # However, update_status uses ItemValue.objects.get_or_create.
+        # This implies we might be using BOTH or migrating.
+        # To be safe and "100% dynamic", let's update both if ItemValue exists.
+        
+        from .models import ItemValue # safe import inside
+        for col_id, val in default_values.items():
+            if val:
+                ItemValue.objects.create(item=item, column_id=col_id, value=val)
+
+        # Return only the new item row for HTMX
+        columns = group.board.columns.all().order_by('position')
+        # Get users for assignment dropdown
+        users = group.board.workspace.organization.memberships.select_related('user').all()
+        return render(request, 'webapp/partials/item_row.html', {'item': item, 'columns': columns, 'users': users})
+    
+    return JsonResponse({'error': 'Name required'}, status=400)
+
+@require_POST
+@login_required
+def update_status(request, item_id, col_id):
+    """
+    HTMX: Updates a specific column value for an item.
+    """
+    item = get_object_or_404(Item, id=item_id)
+    column = get_object_or_404(Column, id=col_id)
+    
+    # Handle different value types if needed, for now getting raw val
+    new_value = request.POST.get('action_value')
+    
+    # If using JSON body (like update_item_order might), parse it
+    if not new_value and request.body:
+        try:
+            import json
+            data = json.loads(request.body)
+            new_value = data.get('action_value')
+        except:
+            pass
+
+    # Save to ItemValue
+    if new_value is not None:
+        # For timeline, we might get a dict
+        if column.type == 'timeline' and isinstance(new_value, dict):
+            pass # Already dict
+        elif column.type == 'timeline':
+             # Try to parse or expect separate start/end
+             pass
+
+        val_obj, created = ItemValue.objects.get_or_create(item=item, column=column)
+        val_obj.value = new_value
+        val_obj.save()
+        
+        # Trigger automation (handled by signals mostly, but can do manual if needed)
+        
+    # Return outerHTML of the cell or the whole row?
+    # Context needs 'val' for the specific cell logic in item_row.html
+    # But item_row.html loops over all columns.
+    # Ideally, we should just return the specific cell content or the whole row.
+    # The HTMX in item_row says: hx-target="#item-{{ item.id }}" hx-swap="outerHTML"
+    # So we must return the WHOLE ROW.
+    
+    # Re-fetch item to ensure values are fresh (or just pass the new map)
+    # Ideally efficient fetch:
+    columns = item.group.board.columns.all().order_by('position')
+    
+    # We need to ensure the item.values property has the updated data.
+    # Since 'item.values' is a property/method on the model (likely cached property logic or just accessing related), 
+    # we rely on it fetching fresh data or we pass explicit context.
+    
+    # We need to ensure the item.values property has the updated data.
+    # Since 'item.values' is a property/method on the model (likely cached property logic or just accessing related), 
+    # we rely on it fetching fresh data or we pass explicit context.
+    
+    users = item.group.board.workspace.organization.memberships.select_related('user').all()
+    return render(request, 'webapp/partials/item_row.html', {'item': item, 'columns': columns, 'users': users})

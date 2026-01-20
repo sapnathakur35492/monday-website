@@ -16,6 +16,7 @@ class Board(models.Model):
         ('table', 'Table'),
         ('kanban', 'Kanban'),
         ('calendar', 'Calendar'),
+        ('gantt', 'Gantt Chart'),
     )
     PRIVACY_CHOICES = (
         ('private', 'Private'),
@@ -64,6 +65,8 @@ class Column(models.Model):
         ('checkbox', 'Checkbox'),
         ('file', 'File'),
         ('formula', 'Formula'),
+        ('timeline', 'Timeline'),
+        ('tags', 'Tags'),
     )
     
     board = models.ForeignKey(Board, on_delete=models.CASCADE, related_name='columns')
@@ -83,6 +86,9 @@ class Item(models.Model):
     A single row/task.
     """
     group = models.ForeignKey(Group, on_delete=models.CASCADE, related_name='items')
+    # Subitems support: Parent item
+    parent = models.ForeignKey('self', on_delete=models.CASCADE, null=True, blank=True, related_name='subitems')
+    
     name = models.CharField(max_length=255)
     created_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True)
     created_at = models.DateTimeField(auto_now_add=True)
@@ -93,14 +99,24 @@ class Item(models.Model):
     
     position = models.PositiveIntegerField(default=0)
 
-    # Attachments can be stored in a separate model or JSON if using external storage
-    # For now, let's keep it simple or add an Attachment model later.
-
     class Meta:
         ordering = ['position']
 
     def __str__(self):
         return self.name
+
+class ItemAttachment(models.Model):
+    """
+    Files attached to an item, often linked to a File column.
+    """
+    item = models.ForeignKey(Item, on_delete=models.CASCADE, related_name='attachments')
+    file = models.FileField(upload_to='attachments/%Y/%m/')
+    uploaded_at = models.DateTimeField(auto_now_add=True)
+    uploaded_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True)
+    column_id = models.CharField(max_length=50, blank=True) # Optional: track which column this file belongs to
+
+    def __str__(self):
+        return self.file.name
 
 class ItemUpdate(models.Model):
     """

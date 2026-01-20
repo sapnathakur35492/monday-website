@@ -1,75 +1,115 @@
 {% extends "webapp/base_app.html" %}
 
 {% block app_content %}
-<div class="h-full flex flex-col">
+<div class="h-full flex flex-col bg-slate-50/50 relative overflow-hidden">
+    <!-- Background Decor -->
+    <div
+        class="absolute top-0 right-0 w-96 h-96 bg-indigo-200/20 rounded-full mix-blend-multiply filter blur-3xl opacity-50 pointer-events-none">
+    </div>
+    <div
+        class="absolute bottom-0 left-0 w-96 h-96 bg-pink-200/20 rounded-full mix-blend-multiply filter blur-3xl opacity-50 pointer-events-none">
+    </div>
+
     <!-- Board Header -->
-    <div class="px-6 py-4 border-b border-slate-200 bg-white flex justify-between items-center">
+    <div
+        class="relative z-10 px-6 py-4 border-b border-white/50 bg-white/60 backdrop-blur-md flex justify-between items-center shrink-0">
         <div>
-            <h1 class="text-2xl font-bold text-slate-800">{{ board.name }}</h1>
-            <p class="text-sm text-slate-500">{{ board.description }}</p>
+            <h1 class="text-2xl font-extrabold text-transparent bg-clip-text bg-gradient-brand leading-tight">{{
+                board.name }}</h1>
+            <p class="text-sm font-medium text-slate-500">{{ board.description }}</p>
         </div>
-        <div class="flex gap-2 bg-slate-100 p-1 rounded-lg">
+        <div class="flex gap-1 bg-slate-100/50 p-1 rounded-xl border border-white/50 shadow-inner">
             <a href="{% url 'board_detail' board.id %}"
-                class="px-3 py-1 text-sm font-medium text-slate-600 rounded-md hover:bg-white hover:shadow-sm">Table</a>
-            <a href="#" class="px-3 py-1 text-sm font-medium text-slate-900 bg-white shadow-sm rounded-md">Kanban</a>
+                class="px-4 py-1.5 text-sm font-bold text-slate-500 rounded-lg hover:bg-white hover:text-primary hover:shadow-sm transition-all flex items-center gap-2">
+                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M3 10h18M3 14h18m-9-4v8m-7 0h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                </svg>
+                Table
+            </a>
             <a href="#"
-                class="px-3 py-1 text-sm font-medium text-slate-600 rounded-md hover:bg-white hover:shadow-sm">Calendar</a>
+                class="px-4 py-1.5 text-sm font-bold text-primary bg-white shadow-sm rounded-lg flex items-center gap-2 ring-1 ring-black/5">
+                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M9 17V7m0 10a2 2 0 01-2 2H5a2 2 0 01-2-2V7a2 2 0 012-2h2a2 2 0 012 2m0 10a2 2 0 002 2h2a2 2 0 002-2M9 7a2 2 0 012-2h2a2 2 0 012 2m0 10V7m0 10a2 2 0 002 2h2a2 2 0 00-2-2h-2a2 2 0 00-2 2" />
+                </svg>
+                Kanban
+            </a>
+            <a href="{% url 'board_calendar' board.id %}"
+                class="px-4 py-1.5 text-sm font-bold text-slate-500 rounded-lg hover:bg-white hover:text-primary hover:shadow-sm transition-all flex items-center gap-2">
+                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                </svg>
+                Calendar
+            </a>
         </div>
     </div>
 
     <!-- Kanban Canvas -->
-    <div class="flex-1 overflow-x-auto overflow-y-hidden bg-slate-100 p-6">
-        <div class="flex h-full gap-6">
+    <div class="flex-1 overflow-x-auto overflow-y-hidden p-6 z-0">
+        <div class="flex h-full gap-6 pb-4">
             {% for status, items in columns_data.items %}
             <!-- Kanban Column -->
-            <div class="w-80 flex-shrink-0 flex flex-col bg-slate-200/50 rounded-xl max-h-full">
+            <div class="w-80 flex-shrink-0 flex flex-col glass-panel rounded-2xl max-h-full border border-white/60 animate-slide-up"
+                style="animation-delay: {{ forloop.counter0 }}00ms;">
                 <!-- Column Header -->
-                <div class="p-4 font-semibold text-slate-700 flex justify-between items-center">
-                    <span class="px-2 py-1 rounded text-sm bg-white shadow-sm"
+                <div
+                    class="p-4 flex justify-between items-center border-b border-slate-100/50 bg-gradient-to-b from-white to-transparent rounded-t-2xl">
+                    <span
+                        class="px-3 py-1.5 rounded-lg text-sm font-bold shadow-sm ring-1 ring-black/5 flex items-center gap-2 bg-white"
                         style="border-left: 4px solid {{ status.color|default:'#cbd5e1' }}">
                         {{ status }}
                     </span>
-                    <span class="text-xs text-slate-500">{{ items|length }}</span>
+                    <span class="text-xs font-bold text-slate-400 bg-slate-100 px-2 py-1 rounded-full">{{ items|length
+                        }}</span>
                 </div>
 
                 <!-- Cards Container -->
-                <div class="flex-1 overflow-y-auto p-3 space-y-3 kanban-col" data-status="{{ status }}">
+                <div class="flex-1 overflow-y-auto p-3 space-y-3 kanban-col custom-scrollbar"
+                    data-status="{{ status }}">
                     {% for item in items %}
-                    <div class="bg-white p-4 rounded-lg shadow-sm border border-slate-200 cursor-move hover:shadow-md transition-shadow group"
+                    <div class="glass-card bg-white p-4 rounded-xl shadow-sm border border-slate-100/60 cursor-move hover:shadow-md hover:border-indigo-200 transition-all group relative overflow-hidden"
                         data-id="{{ item.id }}">
-                        <div class="flex justify-between items-start mb-2">
-                            <h4 class="font-medium text-slate-800">{{ item.name }}</h4>
-                            <button class="text-slate-300 opacity-0 group-hover:opacity-100 hover:text-slate-500">
-                                <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                        d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
-                                </svg>
-                            </button>
-                        </div>
-                        <div class="text-xs text-slate-500 mb-3 flex items-center gap-2">
-                            <span
-                                class="inline-block w-2 h-2 rounded-full bg-{{ item.group.color|default:'gray' }}-400"></span>
-                            {{ item.group.title }}
-                        </div>
-
-                        <!-- Mini Column Values (Date, Person, etc.) -->
-                        <div class="space-y-1">
-                            {% for col_id, val in item.values.items %}
-                            {% if val and col_id != exclude_col_id %}
-                            <div class="text-xs text-slate-600 truncate">
-                                {{ val }}
+                        <div class="absolute inset-0 bg-gradient-to-br from-white to-slate-50 opacity-50"></div>
+                        <div class="relative z-10">
+                            <div class="flex justify-between items-start mb-3">
+                                <h4 class="font-bold text-slate-700 leading-snug">{{ item.name }}</h4>
+                                <button
+                                    class="text-slate-300 opacity-0 group-hover:opacity-100 hover:text-primary transition-all bg-white rounded-full p-1 shadow-sm">
+                                    <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+                                    </svg>
+                                </button>
                             </div>
-                            {% endif %}
-                            {% endfor %}
+                            <div
+                                class="text-[10px] font-bold text-slate-400 mb-3 flex items-center gap-2 uppercase tracking-wider">
+                                <span class="inline-block w-2 h-2 rounded-full"
+                                    style="background-color: {{ item.group.color|default:'#94a3b8' }}"></span>
+                                {{ item.group.title }}
+                            </div>
+
+                            <!-- Mini Column Values -->
+                            <div class="space-y-1.5 pt-2 border-t border-slate-50">
+                                {% for col_id, val in item.values.items %}
+                                {% if val and col_id != exclude_col_id %}
+                                <div
+                                    class="text-xs text-slate-600 truncate flex items-center gap-2 bg-slate-50/50 p-1 rounded-md">
+                                    {{ val }}
+                                </div>
+                                {% endif %}
+                                {% endfor %}
+                            </div>
                         </div>
                     </div>
                     {% endfor %}
                 </div>
 
                 <!-- Add Card Button -->
-                <div class="p-3">
+                <div class="p-3 bg-white/30 backdrop-blur rounded-b-2xl border-t border-slate-50">
                     <button
-                        class="w-full py-2 rounded-md text-slate-500 hover:bg-slate-300/50 text-sm flex items-center justify-center gap-1 transition-colors">
+                        class="w-full py-2.5 rounded-xl text-slate-500 hover:text-primary hover:bg-white/80 font-bold text-sm flex items-center justify-center gap-2 transition-all border border-transparent hover:border-indigo-100 hover:shadow-sm">
                         <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
                         </svg>
@@ -81,8 +121,14 @@
 
             <!-- Add Column Placeholder -->
             <div
-                class="w-80 flex-shrink-0 flex items-center justify-center rounded-xl border-2 border-dashed border-slate-300 hover:border-indigo-400 hover:bg-indigo-50 transition-colors cursor-pointer group">
-                <span class="text-slate-400 font-medium group-hover:text-indigo-500">+ Add Status</span>
+                class="w-80 flex-shrink-0 flex items-center justify-center rounded-2xl border-2 border-dashed border-slate-300/60 hover:border-primary hover:bg-indigo-50/30 transition-all cursor-pointer group h-[200px] animate-slide-up">
+                <span
+                    class="text-slate-400 font-bold group-hover:text-primary flex items-center gap-2 transition-colors">
+                    <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+                    </svg>
+                    Add Status
+                </span>
             </div>
         </div>
     </div>
@@ -99,8 +145,10 @@
         columns.forEach(col => {
             new Sortable(col, {
                 group: 'kanban', // set both lists to same group
-                animation: 150,
-                ghostClass: 'bg-indigo-50',
+                animation: 200,
+                ghostClass: 'bg-indigo-50/50',
+                dragClass: 'opacity-50',
+                chosenClass: 'scale-[1.02] shadow-xl rotate-1 cursor-grabbing',
                 onEnd: function (evt) {
                     const itemEl = evt.item;
                     const newStatus = evt.to.dataset.status;
@@ -109,8 +157,7 @@
 
                     if (newStatus === oldStatus) return; // No change
 
-                    // Optimistic update done by SortableJS visually.
-                    // Now sync with Backend
+                    // Sync with Backend
                     fetch('{% url "update_item_order" %}', {
                         method: 'POST',
                         headers: {
@@ -126,12 +173,18 @@
                         .then(data => {
                             console.log('Update success:', data);
                             if (newStatus === 'Done') {
-                                try { confetti({ particleCount: 100, spread: 70, origin: { y: 0.6 } }); } catch (e) { }
+                                try {
+                                    confetti({
+                                        particleCount: 100,
+                                        spread: 70,
+                                        origin: { y: 0.6 },
+                                        colors: ['#22c55e', '#ec4899', '#f59e0b']
+                                    });
+                                } catch (e) { }
                             }
                         })
                         .catch(error => {
                             console.error('Error updating order:', error);
-                            // Ideally revert move on error, but simple logging for now
                         });
                 }
             });

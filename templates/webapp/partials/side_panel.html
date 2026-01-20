@@ -1,59 +1,70 @@
-<div class="h-full flex flex-col bg-slate-50">
+<div class="h-full flex flex-col bg-slate-50/80 backdrop-blur-xl">
     <!-- Header -->
-    <div class="px-6 py-4 bg-white border-b border-slate-200 flex justify-between items-center shrink-0">
+    <div
+        class="px-8 py-5 bg-white/60 backdrop-blur-md border-b border-white/50 flex justify-between items-center shrink-0 shadow-sm sticky top-0 z-20">
         <div>
-            <h2 class="text-lg font-bold text-slate-800">{{ item.name }}</h2>
-            <p class="text-xs text-slate-500">Updates & Activity Log</p>
+            <h2 class="text-xl font-extrabold text-slate-800 leading-tight">{{ item.name }}</h2>
+            <div class="flex items-center gap-2 mt-1">
+                <span class="w-2 h-2 rounded-full" style="background-color: {{ item.group.color }};"></span>
+                <p class="text-xs font-bold text-slate-500 uppercase tracking-wide">Updates & Activity Log</p>
+            </div>
         </div>
         <button @click="sidePanelOpen = false"
-            class="text-slate-400 hover:text-slate-600 p-1 rounded-full hover:bg-slate-100 transition-colors">
-            <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            class="text-slate-400 hover:text-red-500 p-2 rounded-xl hover:bg-red-50 transition-all border border-transparent hover:border-red-100 shadow-sm">
+            <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
             </svg>
         </button>
     </div>
 
     <!-- Scrollable Content -->
-    <div class="flex-1 overflow-y-auto p-6" id="updates-container">
-        <!-- Input Area (Top like Monday) -->
+    <div class="flex-1 overflow-y-auto p-8 custom-scrollbar" id="updates-container">
+        <!-- Input Area -->
         <div
-            class="bg-white rounded-xl border border-indigo-100 shadow-sm p-4 mb-8 focus-within:ring-2 focus-within:ring-indigo-500/20 transition-all">
-            <form hx-post="{% url 'post_item_update' item.id %}" hx-target="#updates-list" hx-swap="afterbegin"
-                hx-on::after-request="this.reset()">
-                {% csrf_token %}
-                <textarea name="body"
-                    class="w-full text-sm text-slate-700 bg-transparent border-none focus:ring-0 p-0 placeholder:text-slate-400 resize-none h-20"
-                    placeholder="Write an update... (@mention, #tags)"></textarea>
-                <div class="flex justify-between items-center mt-3 pt-3 border-t border-slate-100">
-                    <div class="flex gap-2">
-                        <!-- Dummy Formatting Icons -->
-                        <button type="button" class="text-slate-400 hover:text-indigo-500"><svg class="w-4 h-4"
-                                fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                    d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13" />
-                            </svg></button>
-                        <button type="button"
-                            class="text-slate-400 hover:text-indigo-500 font-bold font-serif">T</button>
+            class="glass-panel p-1 rounded-2xl mb-8 border border-white/60 shadow-lg shadow-indigo-500/5 group focus-within:ring-2 focus-within:ring-primary/20 transition-all">
+            <div class="bg-white/80 rounded-xl p-4">
+                <form hx-post="{% url 'post_item_update' item.id %}" hx-target="#updates-list" hx-swap="afterbegin"
+                    hx-on::after-request="this.reset()">
+                    {% csrf_token %}
+                    <textarea name="body"
+                        class="w-full text-sm font-medium text-slate-800 bg-transparent border-none focus:ring-0 p-1 placeholder:text-slate-400 resize-none h-24"
+                        placeholder="Write an update... Use @ to mention someone"></textarea>
+                    <div class="flex justify-between items-center mt-3 pt-3 border-t border-slate-100">
+                        <div class="flex gap-1">
+                            <button type="button"
+                                class="p-1.5 text-slate-400 hover:text-primary hover:bg-indigo-50 rounded-lg transition-colors"><svg
+                                    class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13" />
+                                </svg></button>
+                            <button type="button"
+                                class="p-1.5 text-slate-400 hover:text-primary hover:bg-indigo-50 rounded-lg transition-colors font-bold font-serif text-xs">T</button>
+                        </div>
+                        <button type="submit"
+                            class="btn-primary px-5 py-1.5 rounded-lg text-xs font-bold shadow-md shadow-indigo-500/20">
+                            Update
+                        </button>
                     </div>
-                    <button type="submit"
-                        class="bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-medium px-4 py-1.5 rounded-full transition-colors shadow-sm hover:shadow-md">
-                        Update
-                    </button>
-                </div>
-            </form>
+                </form>
+            </div>
         </div>
 
         <!-- Updates Feed -->
-        <div id="updates-list" class="space-y-2">
+        <div id="updates-list" class="space-y-6 relative">
+            <div class="absolute left-4 top-0 bottom-0 w-0.5 bg-slate-200/50 -z-10"></div>
             {% for update in updates %}
             {% include "webapp/partials/update_card.html" %}
             {% empty %}
-            <div class="text-center py-10 text-slate-400">
-                <svg class="w-12 h-12 mx-auto mb-3 opacity-50" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
-                        d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" />
-                </svg>
-                <p class="text-sm">No updates yet. Be the first to write one!</p>
+            <div class="text-center py-16 text-slate-400">
+                <div
+                    class="w-16 h-16 bg-slate-200/50 rounded-full flex items-center justify-center mx-auto mb-4 animate-pulse">
+                    <svg class="w-8 h-8 opacity-50" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
+                            d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" />
+                    </svg>
+                </div>
+                <p class="text-sm font-medium">No updates yet.</p>
+                <p class="text-xs text-slate-400 mt-1">Be the first to write one!</p>
             </div>
             {% endfor %}
         </div>

@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 
 {% block content %}
-<div class="bg-white py-16 sm:py-24" x-data="{ billing: 'yearly' }">
+<div class="bg-white py-16 sm:py-24" x-data="{ billing: 'yearly', seats: 10 }">
     <div class="mx-auto max-w-7xl px-6 lg:px-8">
 
         <!-- Header -->
@@ -11,17 +11,25 @@
 
             <!-- Controls -->
             <div class="mt-8 flex flex-col sm:flex-row items-center justify-center gap-6">
-                <!-- Team Size (Visual) -->
+                <!-- Team Size (Interactive) -->
                 <div class="relative">
-                    <button
-                        class="flex items-center justify-between w-48 px-4 py-2 bg-white border border-slate-300 rounded-md shadow-sm text-sm font-medium text-slate-700 hover:bg-slate-50">
-                        <span>10 Seats</span>
-                        <svg class="w-5 h-5 ml-2 -mr-1 text-slate-500" fill="currentColor" viewBox="0 0 20 20">
+                    <select x-model="seats"
+                        class="appearance-none w-48 px-4 py-2 bg-white border border-slate-300 rounded-md shadow-sm text-sm font-medium text-slate-700 hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-indigo-500 cursor-pointer">
+                        <option value="1">1 Seat</option>
+                        <option value="5">5 Seats</option>
+                        <option value="10">10 Seats</option>
+                        <option value="15">15 Seats</option>
+                        <option value="20">20 Seats</option>
+                        <option value="50">50 Seats</option>
+                        <option value="100">100+ Seats</option>
+                    </select>
+                    <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-slate-500">
+                        <svg class="h-4 w-4" fill="currentColor" viewBox="0 0 20 20">
                             <path fill-rule="evenodd"
                                 d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"
                                 clip-rule="evenodd" />
                         </svg>
-                    </button>
+                    </div>
                 </div>
 
                 <!-- Billing Toggle -->
@@ -62,14 +70,17 @@
                 <h3 class="text-xl font-bold text-slate-900" id="tier-{{ plan.id }}">{{ plan.name }}</h3>
 
                 <div class="mt-4 flex items-baseline text-slate-900">
-                    <span class="text-4xl font-extrabold tracking-tight">${{ plan.price|floatformat:0 }}</span>
+                    <span class="text-4xl font-extrabold tracking-tight"
+                        x-text="billing === 'yearly' ? '${{ plan.price|floatformat:0 }}' : '$' + Math.round({{ plan.price }} * 1.2)"></span>
                     <span class="ml-1 text-sm font-semibold text-slate-500">seat / month</span>
                 </div>
-                <p class="mt-1 text-xs text-slate-400">Total ${{ plan.price|floatformat:0 }}0 / month</p>
+                <p class="mt-1 text-xs text-slate-400">Total <span
+                        x-text="billing === 'yearly' ? '$' + ({{ plan.price }} * seats).toLocaleString() : '$' + (Math.round({{ plan.price }} * 1.2) * seats).toLocaleString()"></span>
+                    / month</p>
 
                 <a href="{% url 'signup' %}?plan={{ plan.id }}"
-                    class="mt-6 block w-full rounded-full py-2.5 px-3 text-center text-sm font-semibold leading-6 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 transition-colors 
-                    {% if 'Pro' in plan.name %}bg-indigo-600 text-white hover:bg-indigo-700 shadow-lg shadow-indigo-500/30{% else %}bg-indigo-50 text-indigo-600 hover:bg-indigo-100{% endif %}">
+                    class="mt-6 block w-full rounded-full py-3 px-3 text-center text-sm font-bold leading-6 transition-all transform hover:-translate-y-1 
+                    {% if 'Pro' in plan.name %}btn-primary text-white shadow-xl shadow-indigo-500/30{% else %}bg-indigo-50 text-indigo-600 hover:bg-indigo-100{% endif %}">
                     Try for free
                 </a>
 

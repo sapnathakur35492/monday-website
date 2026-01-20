@@ -119,6 +119,37 @@ def billing_dashboard(request):
     return render(request, 'core/billing.html', {'billing': billing})
 
 @login_required
+def upgrade_plan(request, plan_name):
+    """
+    Simulates Stripe Checkout Session creation.
+    Redirects to success page to mock a completed payment.
+    """
+    # In real world: 
+    # session = stripe.checkout.Session.create(...)
+    # return redirect(session.url)
+    
+    # Mocking: Direct redirect to success with plan details
+    return render(request, 'core/upgrade_confirm.html', {'plan_name': plan_name})
+
+@login_required
+def payment_success(request, plan_name):
+    """
+    Simulates Stripe Success Callback / Webhook.
+    Updates the organization's billing profile.
+    """
+    org = request.user.owned_organizations.first()
+    if org:
+        profile, created = BillingProfile.objects.get_or_create(organization=org)
+        profile.plan_name = plan_name
+        profile.save()
+        
+        # Add success message
+        from django.contrib import messages
+        messages.success(request, f"Successfully upgraded to our {plan_name.capitalize()} Plan! Thank you for your business.")
+        
+    return redirect('billing')
+
+@login_required
 def team_list(request):
     """
     List all members in the user's organization.

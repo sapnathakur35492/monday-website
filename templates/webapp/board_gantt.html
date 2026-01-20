@@ -1,0 +1,103 @@
+{% extends "webapp/base_app.html" %}
+
+{% block app_content %}
+<div class="h-screen flex flex-col bg-slate-50/50" x-data="{ scale: 'day' }">
+    <!-- Board Header -->
+    <div class="bg-white/80 backdrop-blur-md border-b border-white shadow-sm z-30 flex-none px-6 py-4">
+        <div class="flex items-center justify-between">
+            <div class="flex items-center gap-4">
+                <h1
+                    class="text-2xl font-black text-transparent bg-clip-text bg-gradient-brand tracking-tight ml-10 lg:ml-0">
+                    {{ board.name }}</h1>
+                <span
+                    class="px-2.5 py-0.5 rounded-lg bg-indigo-50 text-indigo-700 text-xs font-bold border border-indigo-100 uppercase tracking-wider">Gantt
+                    View</span>
+            </div>
+
+            <div class="flex items-center gap-3">
+                <!-- View Switcher -->
+                <div class="bg-slate-100 p-1 rounded-xl flex items-center gap-1">
+                    <a href="{% url 'board_detail' board.id %}"
+                        class="px-3 py-1.5 rounded-lg text-sm font-bold text-slate-500 hover:text-slate-800 hover:bg-white transition-all">Table</a>
+                    <a href="{% url 'kanban_view' board.id %}"
+                        class="px-3 py-1.5 rounded-lg text-sm font-bold text-slate-500 hover:text-slate-800 hover:bg-white transition-all">Kanban</a>
+                    <div
+                        class="px-3 py-1.5 rounded-lg text-sm font-bold text-indigo-600 bg-white shadow-sm ring-1 ring-black/5">
+                        Gantt</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Gantt Controls -->
+    <div class="px-6 py-2 border-b border-slate-200 bg-white/40 flex items-center gap-4">
+        <label class="text-xs font-bold text-slate-500 uppercase">Zoom:</label>
+        <div class="flex gap-1">
+            <button @click="scale = 'day'"
+                :class="scale === 'day' ? 'bg-indigo-100 text-indigo-700' : 'hover:bg-slate-100 text-slate-600'"
+                class="px-3 py-1 rounded text-xs font-bold transition-all">Days</button>
+            <button @click="scale = 'week'"
+                :class="scale === 'week' ? 'bg-indigo-100 text-indigo-700' : 'hover:bg-slate-100 text-slate-600'"
+                class="px-3 py-1 rounded text-xs font-bold transition-all">Weeks</button>
+        </div>
+    </div>
+
+    <!-- Gantt Chart Container -->
+    <div class="flex-1 overflow-auto relative custom-scrollbar">
+        <div class="min-w-[1200px] p-6">
+
+            <!-- Timeline Header -->
+            <div class="flex mb-4 sticky top-0 bg-slate-50 z-20 pb-2 border-b border-slate-200">
+                <div class="w-64 flex-none font-bold text-slate-700 uppercase text-xs tracking-wider pl-4">Item</div>
+                <div
+                    class="flex-1 grid grid-cols-12 gap-px bg-slate-200 border border-slate-200 rounded-lg overflow-hidden">
+                    <!-- Generating simplified timeline headers -->
+                    {% for i in "123456789012"|make_list %}
+                    <div class="bg-white h-8 flex items-center justify-center text-[10px] font-bold text-slate-500">
+                        Pd {{ i }}
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <!-- Gantt Rows -->
+            <div class="space-y-3">
+                {% for group in board.groups.all %}
+                <!-- Group Header -->
+                <div class="flex items-center gap-2 mb-2">
+                    <div class="w-3 h-3 rounded-full" style="background-color: {{ group.color }}"></div>
+                    <h3 class="font-bold text-slate-800" style="color: {{ group.color }}">{{ group.title }}</h3>
+                </div>
+
+                {% for item in group.items.all %}
+                <div class="flex group hover:bg-white hover:shadow-sm rounded-lg transition-all p-1">
+                    <div class="w-64 flex-none pl-4 pr-4 py-2 flex items-center gap-2 border-r border-slate-100/50">
+                        <span
+                            class="w-1.5 h-1.5 rounded-full bg-slate-300 group-hover:bg-indigo-400 transition-colors"></span>
+                        <span class="text-sm font-medium text-slate-700 truncate">{{ item.name }}</span>
+                    </div>
+
+                    <!-- Timeline Bar (Simulated position for MVP) -->
+                    <div
+                        class="flex-1 relative h-9 bg-slate-50/50 rounded-lg mx-2 border border-slate-100/50 overflow-hidden">
+                        <!-- 
+                                In a real implementation, we'd calculate left% and width% based on the 'timeline' column dates relative to the view range.
+                                For MVP parity demonstration, we render a placeholder bar.
+                             -->
+                        <div class="absolute top-1.5 bottom-1.5 rounded-md bg-gradient-to-r from-blue-400 to-indigo-500 shadow-sm opacity-80 hover:opacity-100 cursor-pointer transition-all hover:scale-[1.01]"
+                            style="left: {{ forloop.counter }}0%; width: 20%; min-width: 100px;">
+                            <div class="w-full h-full flex items-center px-2">
+                                <span class="text-[10px] font-bold text-white truncate drop-shadow-sm">{{ item.name
+                                    }}</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+                {% endfor %}
+            </div>
+
+        </div>
+    </div>
+</div>
+{% endblock %}

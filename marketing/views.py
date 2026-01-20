@@ -7,10 +7,17 @@ def landing_page(request):
     Renders the public landing page with dynamic content.
     """
     page = Page.objects.filter(slug='home', is_published=True).first()
-    return render(request, 'marketing/landing.html', {'page': page})
+    features = Feature.objects.filter(is_active=True).order_by('order')[:6] # Show top 6 features
+    plans = PricingPlan.objects.all().order_by('price')[:3] # Show top 3 plans
+    
+    return render(request, 'marketing/landing.html', {
+        'page': page,
+        'features': features,
+        'plans': plans
+    })
 
 def features(request):
-    features_list = Feature.objects.filter(is_active=True)
+    features_list = Feature.objects.filter(is_active=True).order_by('order')
     return render(request, 'marketing/features.html', {'features': features_list})
 
 def pricing(request):

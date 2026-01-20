@@ -1,0 +1,27 @@
+{% extends "webapp/base_app.html" %}
+
+{% block app_content %}
+<div class="p-10">
+    <h1 class="text-3xl font-bold text-red-600 mb-6">MINIMAL DEBUG DASHBOARD</h1>
+
+    {% if workspaces %}
+    {% for workspace in workspaces %}
+    <div class="mb-8 p-4 border border-gray-300 rounded">
+        <h2 class="text-xl font-bold">Workspace: {{ workspace.name }}</h2>
+        <p>Board Count: {{ workspace.boards.count }}</p>
+        <p>Boards Prefetched: {{ workspace.boards.all|length }}</p>
+
+        <ul class="ml-4 mt-2 list-disc">
+            {% for board in workspace.boards.all %}
+            <li>
+                Board: {{ board.name }} (ID: {{ board.id }})
+            </li>
+            {% endfor %}
+        </ul>
+    </div>
+    {% endfor %}
+    {% else %}
+    <p>No workspaces found.</p>
+    {% endif %}
+</div>
+{% endblock %}
