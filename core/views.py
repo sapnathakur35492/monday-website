@@ -55,24 +55,32 @@ def signup_view(request):
 def login_view(request):
     if request.user.is_authenticated:
         return redirect('dashboard')
-        
+    
+    # Initialize form and error
+    form = LoginForm()
     error = None
+    
     if request.method == 'POST':
         form = LoginForm(request.POST)
         if form.is_valid():
-            email = form.cleaned_data['email']
-            password = form.cleaned_data['password']
+            email = form.cleaned_data.get('email', '').strip()
+            password = form.cleaned_data.get('password', '')
+            
+            # Authenticate user
             user = authenticate(request, email=email, password=password)
             
             if user is not None:
                 login(request, user)
-                if 'next' in request.POST:
-                    return redirect(request.POST.get('next'))
+                # Check for next parameter
+                next_url = request.POST.get('next') or request.GET.get('next')
+                if next_url:
+                    return redirect(next_url)
                 return redirect('dashboard')
             else:
-                error = "Invalid email or password"
-    else:
-        form = LoginForm()
+                error = "Invalid email or password. Please try again."
+        else:
+            error = "Please enter valid email and password."
+    
     return render(request, 'core/login.html', {'form': form, 'error': error})
 
 def logout_view(request):
@@ -111,25 +119,47 @@ def billing_dashboard(request):
     org = request.user.owned_organizations.first()
     if not org:
         # Create default org if missing (fallback for MVP)
+        from core.models import Organization
         org = Organization.objects.create(name=f"{request.user.username}'s Team", owner=request.user)
         
     # Get or create billing profile
     billing, created = BillingProfile.objects.get_or_create(organization=org)
     
-    return render(request, 'core/billing.html', {'billing': billing})
+    # Context for Plans
+    from core.saas_models import PricingPlan
+    plans = PricingPlan.objects.filter(is_active=True).order_by('price')
+    
+    return render(request, 'core/billing.html', {'billing': billing, 'plans': plans})
 
 @login_required
 def upgrade_plan(request, plan_name):
     """
     Simulates Stripe Checkout Session creation.
     Redirects to success page to mock a completed payment.
+    param plan_name: This matches the 'slug' of the PricingPlan.
     """
     # In real world: 
     # session = stripe.checkout.Session.create(...)
     # return redirect(session.url)
     
-    # Mocking: Direct redirect to success with plan details
-    return render(request, 'core/upgrade_confirm.html', {'plan_name': plan_name})
+    # Verify plan exists (using slug aka plan_name in URL path which we haven't changed yet, assuming it maps to slug)
+    from django.shortcuts import get_object_or_404
+    from core.saas_models import PricingPlan
+    
+    # Try looking up by slug first, falling back if needed
+    plan = PricingPlan.objects.filter(slug=plan_name).first()
+    if not plan:
+         # Fallback search by name
+         plan = PricingPlan.objects.filter(name__iexact=plan_name).first()
+    
+    if not plan:
+         # Hard fail if invalid plan
+         from django.contrib import messages
+         messages.error(request, "Invalid plan selected.")
+         return redirect('billing')
+
+    # Mocking: Direct redirect to success with plan slug
+    return render(request, 'core/upgrade_confirm.html', {'plan': plan})
 
 @login_required
 def payment_success(request, plan_name):
@@ -139,13 +169,22 @@ def payment_success(request, plan_name):
     """
     org = request.user.owned_organizations.first()
     if org:
+        from core.saas_models import PricingPlan
+        plan = PricingPlan.objects.filter(slug=plan_name).first()
+        if not plan:
+            plan = PricingPlan.objects.filter(name__iexact=plan_name).first()
+
         profile, created = BillingProfile.objects.get_or_create(organization=org)
-        profile.plan_name = plan_name
-        profile.save()
         
-        # Add success message
-        from django.contrib import messages
-        messages.success(request, f"Successfully upgraded to our {plan_name.capitalize()} Plan! Thank you for your business.")
+        if plan:
+            profile.plan = plan
+            profile.save()
+            # Add success message
+            from django.contrib import messages
+            messages.success(request, f"Successfully upgraded to our {plan.name} Plan! Thank you for your business.")
+        else:
+             from django.contrib import messages
+             messages.error(request, "Plan not found during activation.")
         
     return redirect('billing')
 

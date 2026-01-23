@@ -67,6 +67,26 @@ class Column(models.Model):
         ('formula', 'Formula'),
         ('timeline', 'Timeline'),
         ('tags', 'Tags'),
+        ('link', 'Link'),
+        ('world_clock', 'World Clock'),
+        ('item_id', 'Item ID'),
+        ('phone', 'Phone'),
+        ('location', 'Location'),
+        ('rating', 'Rating'),
+        ('progress', 'Progress'),
+        ('email', 'Email'),
+        ('vote', 'Vote'),
+        ('creation_log', 'Creation Log'),
+        ('last_updated', 'Last Updated'),
+        ('auto_number', 'Auto Number'),
+        ('country', 'Country'),
+        ('color_picker', 'Color Picker'),
+        ('time_tracking', 'Time Tracking'),
+        ('week', 'Week'),
+        ('hour', 'Hour'),
+        ('dependency', 'Dependency'),
+        ('connect_boards', 'Connect Boards'),
+        ('formula', 'Formula'),
     )
     
     board = models.ForeignKey(Board, on_delete=models.CASCADE, related_name='columns')
@@ -134,4 +154,33 @@ class ItemUpdate(models.Model):
         ordering = ['-created_at']
 
     def __str__(self):
-        return f"{self.user.username} on {self.item.name}"
+        return f"Update by {self.user} on {self.item}"
+
+class UserDashboard(models.Model):
+    name = models.CharField(max_length=255)
+    description = models.TextField(blank=True)
+    owner = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    workspace = models.ForeignKey(Workspace, on_delete=models.CASCADE, related_name='dashboards', null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return self.name
+
+class DashboardWidget(models.Model):
+    WIDGET_TYPES = (
+        ('numbers', 'Numbers'),
+        ('chart', 'Chart'),
+        ('battery', 'Battery'),
+        ('text', 'Text'),
+    )
+    dashboard = models.ForeignKey(UserDashboard, on_delete=models.CASCADE, related_name='widgets')
+    title = models.CharField(max_length=255)
+    type = models.CharField(max_length=20, choices=WIDGET_TYPES)
+    settings = models.JSONField(default=dict) # Source board_id, column_id, calculation type
+    position = models.PositiveIntegerField(default=0)
+    
+    class Meta:
+        ordering = ['position']
+
+    def __str__(self):
+        return f"{self.title} ({self.type})"

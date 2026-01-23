@@ -1,0 +1,64 @@
+{% extends "webapp/base_app.html" %}
+
+{% block title %}My Dashboards{% endblock %}
+
+{% block content %}
+<div class="h-full flex flex-col bg-slate-50">
+    <!-- Header -->
+    <div class="flex items-center justify-between px-6 py-4 bg-white border-b border-slate-200">
+        <div>
+            <h1 class="text-2xl font-bold text-slate-800">Dashboards</h1>
+            <p class="text-sm text-slate-500">Visualize your work across boards</p>
+        </div>
+        <form method="POST" action="{% url 'create_user_dashboard' %}" class="flex gap-2" x-data="{ open: false }">
+            {% csrf_token %}
+            <div class="relative">
+                <input type="text" name="name" placeholder="New Dashboard Name..." required
+                    class="rounded-lg border-slate-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm">
+            </div>
+            <button type="submit"
+                class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors flex items-center gap-2">
+                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+                </svg>
+                Create Dashboard
+            </button>
+        </form>
+    </div>
+
+    <!-- Dashboard Grid -->
+    <div class="p-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 overflow-y-auto">
+        {% for dashboard in dashboards %}
+        <a href="{% url 'user_dashboard_detail' dashboard.id %}"
+            class="block bg-white p-6 rounded-xl border border-slate-200 hover:border-indigo-300 hover:shadow-lg transition-all group relative overflow-hidden">
+            <div class="absolute top-0 left-0 w-1 h-full bg-indigo-500"></div>
+            <div class="flex justify-between items-start mb-4">
+                <div
+                    class="w-12 h-12 rounded-lg bg-indigo-50 flex items-center justify-center text-indigo-600 group-hover:scale-110 transition-transform">
+                    <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 002 2h2a2 2 0 002-2z" />
+                    </svg>
+                </div>
+                <span class="text-xs font-medium text-slate-400 bg-slate-50 px-2 py-1 rounded">
+                    {{ dashboard.widgets.count }} Widgets
+                </span>
+            </div>
+            <h3 class="text-lg font-bold text-slate-800 mb-1 group-hover:text-indigo-600 transition-colors">{{
+                dashboard.name }}</h3>
+            <p class="text-sm text-slate-400 truncate">Created {{ dashboard.created_at|date:"M d, Y" }}</p>
+        </a>
+        {% empty %}
+        <div
+            class="col-span-full flex flex-col items-center justify-center py-20 text-slate-400 bg-white rounded-xl border border-dashed border-slate-300">
+            <svg class="w-16 h-16 mb-4 text-slate-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
+            </svg>
+            <p class="text-lg font-medium text-slate-600">No Dashboards Yet</p>
+            <p class="text-sm text-slate-500 mb-6">Create your first dashboard to visualize data.</p>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}

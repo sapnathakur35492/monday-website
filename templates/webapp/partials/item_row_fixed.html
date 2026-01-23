@@ -335,7 +335,7 @@
         {% elif col.type == 'rating' %}
         <div class="h-full px-2 flex items-center justify-center">
             <div x-data="{ rating: {{ val|default:0 }}, hover: 0 }" class="flex items-center gap-0.5">
-                {% for i in '1,2,3,4,5'|make_list_comma %}
+                {% for i in '12345'|make_list %}
                 <button type="button" @mouseenter="hover = {{ i }}" @mouseleave="hover = 0"
                     @click="rating = {{ i }}; $nextTick(() => { htmx.trigger($el, 'rate') })"
                     hx-post="{% url 'update_status' item.id col.id %}" hx-trigger="rate" hx-target="#item-{{ item.id }}"

@@ -1,11 +1,12 @@
 from django.urls import path
-from . import views
+from . import views, views_dashboard
 
 urlpatterns = [
     path('', views.dashboard, name='dashboard'),
     path('my-work/', views.my_work_view, name='my_work'),
     path('workspace/create/', views.create_workspace, name='create_workspace'),
     path('workspace/<int:workspace_id>/board/create/', views.create_board, name='create_board'),
+    path('api/board/<int:board_id>/items/', views.get_board_items, name='get_board_items'),
     path('board/<int:board_id>/', views.board_detail, name='board_detail'),
     path('group/<int:group_id>/add_item/', views.add_item, name='add_item'),
     path('item/<int:item_id>/update/<int:col_id>/', views.update_status, name='update_status'),
@@ -21,5 +22,10 @@ urlpatterns = [
     path('board/<int:board_id>/group/<int:group_id>/delete/', views.delete_group, name='delete_group'),
     path('board/group/update_title/', views.update_group_title, name='update_group_title'),
     path('board/<int:board_id>/item/<int:item_id>/delete/', views.delete_item, name='delete_item'),
+    
+    # User Dashboards
+    path('dashboards/', views_dashboard.dashboard_list, name='user_dashboard_list'),
+    path('dashboards/create/', views_dashboard.create_dashboard, name='create_user_dashboard'),
+    path('dashboards/<int:dashboard_id>/', views_dashboard.dashboard_detail, name='user_dashboard_detail'),
 ]
 

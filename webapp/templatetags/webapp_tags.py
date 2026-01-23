@@ -21,3 +21,13 @@ def make_list(value):
     if not value:
         return []
     return [x.strip() for x in value.split(',')]
+
+@register.filter
+def make_list_comma(value):
+    """
+    Converts a comma-separated string into a list.
+    Usage: {{ "A,B,C"|make_list_comma }}
+    """
+    if not value:
+        return []
+    return [x.strip() for x in value.split(',')]

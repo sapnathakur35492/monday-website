@@ -58,9 +58,9 @@
             <!-- Loop through plans -->
             {% for plan in plans %}
             <div
-                class="relative flex flex-col rounded-2xl bg-white p-6 shadow-sm border border-slate-200 hover:shadow-lg transition-shadow {% if 'Pro' in plan.name %}border-indigo-600 ring-1 ring-indigo-600 scale-105 z-10{% endif %}">
+                class="relative flex flex-col rounded-2xl bg-white p-6 shadow-sm border border-slate-200 hover:shadow-lg transition-shadow {% if plan.is_popular %}border-indigo-600 ring-1 ring-indigo-600 scale-105 z-10{% endif %}">
 
-                {% if 'Pro' in plan.name or forloop.counter == 2 %}
+                {% if plan.is_popular %}
                 <div
                     class="absolute -top-4 left-0 right-0 mx-auto w-32 rounded-full bg-indigo-600 px-3 py-1 text-center text-xs font-semibold text-white uppercase tracking-wide">
                     Most Popular
@@ -80,7 +80,7 @@
 
                 <a href="{% url 'signup' %}?plan={{ plan.id }}"
                     class="mt-6 block w-full rounded-full py-3 px-3 text-center text-sm font-bold leading-6 transition-all transform hover:-translate-y-1 
-                    {% if 'Pro' in plan.name %}btn-primary text-white shadow-xl shadow-indigo-500/30{% else %}bg-indigo-50 text-indigo-600 hover:bg-indigo-100{% endif %}">
+                    {% if plan.is_popular %}btn-primary text-white shadow-xl shadow-indigo-500/30{% else %}bg-indigo-50 text-indigo-600 hover:bg-indigo-100{% endif %}">
                     Try for free
                 </a>
 
@@ -97,7 +97,7 @@
 
                 <p class="mt-6 text-sm font-medium text-slate-900">Everything in previous, plus:</p>
                 <ul role="list" class="mt-4 space-y-3 text-sm leading-6 text-slate-600">
-                    {% for feature in plan.features %}
+                    {% for feature in plan.features.all %}
                     <li class="flex gap-x-3">
                         <svg class="h-6 w-5 flex-none text-green-500" viewBox="0 0 20 20" fill="currentColor"
                             aria-hidden="true">

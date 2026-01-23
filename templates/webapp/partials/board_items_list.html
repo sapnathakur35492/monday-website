@@ -1,0 +1,25 @@
+{% for item in items %}
+<div class="px-3 py-2 hover:bg-slate-50 cursor-pointer flex items-center justify-between group transition-colors"
+    onclick="
+        let currentVal = this.closest('[x-data]').__x.$data.selectedItems;
+        let id = {{ item.id }};
+        let name = '{{ item.name|escapejs }}';
+        
+        // Toggle selection logic handled in Alpine
+        this.closest('[x-data]').__x.$data.toggleItem(id, name);
+    ">
+    <div class="flex items-center gap-2">
+        <div class="w-4 h-4 rounded border flex items-center justify-center transition-colors"
+            :class="selectedIds.includes({{ item.id }}) ? 'bg-indigo-500 border-indigo-500' : 'border-slate-300 bg-white'">
+            <svg x-show="selectedIds.includes({{ item.id }})" class="w-3 h-3 text-white" fill="none" viewBox="0 0 24 24"
+                stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+            </svg>
+        </div>
+        <span class="text-sm text-slate-700 font-medium">{{ item.name }}</span>
+    </div>
+    <span class="text-[10px] text-slate-400 bg-slate-100 px-1.5 py-0.5 rounded">{{ item.group.title }}</span>
+</div>
+{% empty %}
+<div class="px-4 py-3 text-sm text-slate-400 text-center italic">No items found</div>
+{% endfor %}

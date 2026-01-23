@@ -51,50 +51,110 @@
             }
         }" class="relative w-full h-full min-h-[40px]">
 
-            <!-- Current Value Display -->
             <div @click="open = !open" :class="statusColors[currentVal] || 'bg-slate-300 text-slate-600'"
                 class="w-full h-full flex items-center justify-center font-bold text-xs uppercase tracking-wide cursor-pointer hover:brightness-110 transition-all">
                 <span x-text="currentVal"></span>
             </div>
 
-            <!-- Dropdown Menu -->
-            <div x-show="open" @click.outside="open = false" style="display: none;"
-                class="absolute top-full left-0 w-[180px] z-50 bg-white rounded-xl shadow-2xl border border-slate-100 py-2 mt-1 font-sans overflow-hidden ring-1 ring-black/5 animate-fade-in">
+            <!-- Popup Modal (Fixed to escape table overflow) -->
+            <template x-teleport="body">
+                <div x-show="open" style="display: none;"
+                    class="fixed inset-0 z-[9999] flex items-center justify-center">
+                    <!-- Backdrop -->
+                    <div @click="open = false" x-show="open" x-transition:enter="ease-out duration-300"
+                        x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100"
+                        x-transition:leave="ease-in duration-200" x-transition:leave-start="opacity-100"
+                        x-transition:leave-end="opacity-0" class="absolute inset-0 bg-slate-900/20 backdrop-blur-sm">
+                    </div>
 
-                <div class="px-3 py-1 text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Select Status
-                </div>
+                    <!-- Menu -->
+                    <div x-show="open" @click.outside="open = false" x-transition:enter="ease-out duration-300"
+                        x-transition:enter-start="opacity-0 scale-90 translate-y-4"
+                        x-transition:enter-end="opacity-100 scale-100 translate-y-0"
+                        x-transition:leave="ease-in duration-200"
+                        x-transition:leave-start="opacity-100 scale-100 translate-y-0"
+                        x-transition:leave-end="opacity-0 scale-95 translate-y-4"
+                        class="relative bg-white rounded-2xl shadow-2xl p-6 w-[320px] max-w-[90vw] animate-scale-in">
 
-                {% with choices=col.settings.choices|default:'' %}
-                {% if choices %}
-                {% for choice in choices %}
-                <div @click="changeStatus('{{ choice }}')" hx-post="{% url 'update_status' item.id col.id %}"
-                    hx-vals='{"action_value": "{{ choice }}"}' hx-target="#item-{{ item.id }}" hx-swap="outerHTML"
-                    class="px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 cursor-pointer flex items-center gap-3 transition-colors">
-                    <span class="w-2.5 h-2.5 rounded-full"
-                        :class="statusColors['{{ choice }}'] || 'bg-slate-300'"></span>
-                    {{ choice }}
+                        <div class="text-center mb-6">
+                            <h3 class="text-lg font-bold text-slate-800">Update Status</h3>
+                            <p class="text-slate-400 text-xs mt-1">Select a new status for this item</p>
+                        </div>
+
+                        <div class="grid grid-cols-1 gap-2 max-h-[60vh] overflow-y-auto pr-1">
+                            {% with choices=col.settings.choices|default:'' %}
+                            {% if choices %}
+                            {% for choice in choices %}
+                            <div @click="changeStatus('{{ choice }}')"
+                                hx-post="{% url 'update_status' item.id col.id %}"
+                                hx-vals='{"action_value": "{{ choice }}"}' hx-target="#item-{{ item.id }}"
+                                hx-swap="outerHTML"
+                                class="p-3 rounded-xl cursor-pointer hover:bg-slate-50 transition-all shadow-sm border border-slate-100 flex items-center justify-between group">
+
+                                <span class="font-bold text-sm text-slate-700">{{ choice }}</span>
+
+                                <span
+                                    class="w-6 h-6 rounded-full flex items-center justify-center shadow-inner ring-2 ring-white"
+                                    :class="statusColors['{{ choice }}'] || 'bg-slate-200'" style="min-width: 1.5rem;">
+                                    <svg x-show="currentVal === '{{ choice }}'"
+                                        class="w-3 h-3 text-white drop-shadow-md" fill="none" viewBox="0 0 24 24"
+                                        stroke="currentColor" stroke-width="3">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
+                                    </svg>
+                                </span>
+                            </div>
+                            {% endfor %}
+                            {% else %}
+                            <!-- Default Options -->
+                            <div @click="changeStatus('Done')" hx-post="{% url 'update_status' item.id col.id %}"
+                                hx-vals='{"action_value": "Done"}' hx-target="#item-{{ item.id }}" hx-swap="outerHTML"
+                                class="p-4 rounded-xl cursor-pointer bg-green-500 text-white shadow-lg shadow-green-200 hover:shadow-green-300 hover:-translate-y-0.5 transition-all flex items-center justify-between font-bold">
+                                <span>Done</span>
+                                <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M5 13l4 4L19 7" />
+                                </svg>
+                            </div>
+
+                            <div @click="changeStatus('Working on it')"
+                                hx-post="{% url 'update_status' item.id col.id %}"
+                                hx-vals='{"action_value": "Working on it"}' hx-target="#item-{{ item.id }}"
+                                hx-swap="outerHTML"
+                                class="p-4 rounded-xl cursor-pointer bg-amber-400 text-white shadow-lg shadow-amber-200 hover:shadow-amber-300 hover:-translate-y-0.5 transition-all flex items-center justify-between font-bold">
+                                <span>Working on it</span>
+                                <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                </svg>
+                            </div>
+
+                            <div @click="changeStatus('Stuck')" hx-post="{% url 'update_status' item.id col.id %}"
+                                hx-vals='{"action_value": "Stuck"}' hx-target="#item-{{ item.id }}" hx-swap="outerHTML"
+                                class="p-4 rounded-xl cursor-pointer bg-red-500 text-white shadow-lg shadow-red-200 hover:shadow-red-300 hover:-translate-y-0.5 transition-all flex items-center justify-between font-bold">
+                                <span>Stuck</span>
+                                <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                                </svg>
+                            </div>
+
+                            <div @click="changeStatus('Not Started')" hx-post="{% url 'update_status' item.id col.id %}"
+                                hx-vals='{"action_value": "Not Started"}' hx-target="#item-{{ item.id }}"
+                                hx-swap="outerHTML"
+                                class="p-4 rounded-xl cursor-pointer bg-slate-100 text-slate-500 hover:bg-slate-200 transition-all flex items-center justify-between font-bold">
+                                <span>Not Started</span>
+                            </div>
+                            {% endif %}
+                            {% endwith %}
+                        </div>
+
+                        <div class="mt-6 pt-4 border-t border-slate-100 text-center">
+                            <button @click="open = false"
+                                class="text-sm font-bold text-slate-400 hover:text-slate-600 transition-colors">Cancel</button>
+                        </div>
+                    </div>
                 </div>
-                {% endfor %}
-                {% else %}
-                <div @click="changeStatus('Not Started')" hx-post="{% url 'update_status' item.id col.id %}"
-                    hx-vals='{"action_value": "Not Started"}' hx-target="#item-{{ item.id }}" hx-swap="outerHTML"
-                    class="px-4 py-2 hover:bg-slate-50 cursor-pointer text-sm font-medium border-l-4 border-slate-300 hover:border-slate-400 transition-all pl-3">
-                    Not Started</div>
-                <div @click="changeStatus('Working on it')" hx-post="{% url 'update_status' item.id col.id %}"
-                    hx-vals='{"action_value": "Working on it"}' hx-target="#item-{{ item.id }}" hx-swap="outerHTML"
-                    class="px-4 py-2 hover:bg-amber-50 cursor-pointer text-sm font-medium border-l-4 border-amber-400 hover:border-amber-500 transition-all pl-3">
-                    Working on it</div>
-                <div @click="changeStatus('Stuck')" hx-post="{% url 'update_status' item.id col.id %}"
-                    hx-vals='{"action_value": "Stuck"}' hx-target="#item-{{ item.id }}" hx-swap="outerHTML"
-                    class="px-4 py-2 hover:bg-red-50 cursor-pointer text-sm font-medium border-l-4 border-red-500 hover:border-red-600 transition-all pl-3">
-                    Stuck</div>
-                <div @click="changeStatus('Done')" hx-post="{% url 'update_status' item.id col.id %}"
-                    hx-vals='{"action_value": "Done"}' hx-target="#item-{{ item.id }}" hx-swap="outerHTML"
-                    class="px-4 py-2 hover:bg-green-50 cursor-pointer text-sm font-medium border-l-4 border-green-500 hover:border-green-600 transition-all pl-3">
-                    Done</div>
-                {% endif %}
-                {% endwith %}
-            </div>
+            </template>
         </div>
 
         {% elif col.type == 'priority' %}
@@ -323,8 +383,8 @@
 
         {% elif col.type == 'checkbox' %}
         <div class="h-full px-2 flex items-center justify-center">
-            <!-- Checkbox fix applied -->
-            <input type="checkbox" {% if val=='true' or val==True %}checked{% endif %}
+            <!-- Checkbox column -->
+            <input type="checkbox" {% if val == 'true' or val == True %}checked{% endif %}
                 class="w-5 h-5 rounded border-slate-300 text-green-500 focus:ring-green-500 cursor-pointer"
                 onchange="this.value = this.checked ? 'true' : 'false'; htmx.trigger(this, 'actualChange')"
                 hx-post="{% url 'update_status' item.id col.id %}" hx-trigger="actualChange"
@@ -452,6 +512,226 @@
             </div>
         </div>
 
+        {% elif col.type == 'vote' %}
+        <div class="h-full px-2 flex items-center justify-center">
+            <button
+                class="flex items-center gap-2 px-3 py-1 rounded-full bg-slate-100 hover:bg-indigo-100 text-slate-600 hover:text-indigo-600 transition-all group"
+                onclick="let v = parseInt(this.querySelector('span').innerText) || 0; this.querySelector('span').innerText = v + 1; this.nextElementSibling.value = v + 1; htmx.trigger(this.nextElementSibling, 'change');">
+                <svg class="w-4 h-4 text-slate-400 group-hover:text-indigo-500" fill="none" viewBox="0 0 24 24"
+                    stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M14 10h4.764a2 2 0 011.789 2.894l-3.5 7A2 2 0 0115.263 21h-4.017c-.163 0-.326-.02-.485-.06L7 20m7-10V5a2 2 0 00-2-2h-.095c-.5 0-.905.405-.905.905 0 .714-.211 1.412-.608 2.006L7 11v9m7-10h-2M7 20H5a2 2 0 01-2-2v-6a2 2 0 012-2h2.5" />
+                </svg>
+                <span class="font-bold text-sm">{{ val|default:0 }}</span>
+            </button>
+            <input type="hidden" name="action_value" value="{{ val|default:0 }}"
+                hx-post="{% url 'update_status' item.id col.id %}" hx-trigger="change" hx-target="#item-{{ item.id }}"
+                hx-swap="outerHTML">
+        </div>
+
+        {% elif col.type == 'creation_log' %}
+        <div class="h-full px-2 flex flex-col justify-center text-xs text-slate-500">
+            <div class="flex items-center gap-1">
+                <div
+                    class="w-4 h-4 rounded-full bg-slate-200 flex items-center justify-center text-[8px] font-bold text-slate-600">
+                    {{ item.created_by.username|slice:":1"|upper|default:"?" }}
+                </div>
+                <span class="font-medium text-slate-700">{{ item.created_by.username|default:"System" }}</span>
+            </div>
+            <div class="ml-5 text-[10px]">{{ item.created_at|date:"M d, P" }}</div>
+        </div>
+
+        {% elif col.type == 'last_updated' %}
+        <div class="h-full px-2 flex items-center justify-center text-xs text-slate-500">
+            <span title="{{ item.updated_at }}">{{ item.updated_at|timesince }} ago</span>
+        </div>
+
+        {% elif col.type == 'auto_number' %}
+        <div class="h-full px-2 flex items-center justify-center">
+            <span class="font-mono text-slate-400 font-bold bg-slate-50 px-2 py-1 rounded">{{ item.id }}</span>
+        </div>
+
+        {% elif col.type == 'country' %}
+        <div x-data="{ open: false, selected: '{{ val|default:" 🇺🇸 US" }}' }"
+            class="relative h-full px-2 flex items-center justify-center">
+            <div @click="open = !open"
+                class="cursor-pointer hover:bg-slate-100 px-2 py-1 rounded flex items-center gap-1 font-medium text-slate-700">
+                <span x-text="selected"></span>
+            </div>
+            <div x-show="open" @click.outside="open = false" style="display: none;"
+                class="absolute top-full left-0 bg-white shadow-xl border border-slate-100 rounded-lg z-50 py-1 w-32 max-h-40 overflow-y-auto">
+                {% for c in "🇺🇸 US,🇬🇧 UK,🇨🇦 CA,🇩🇪 DE,🇫🇷 FR,🇮🇳 IN,🇯🇵 JP,🇦🇺 AU"|make_list_comma %}
+                <div @click="selected = '{{ c }}'; open = false; $nextTick(() => { $refs.countryInput.value = '{{ c }}'; htmx.trigger($refs.countryInput, 'change') })"
+                    class="px-3 py-1 hover:bg-slate-50 cursor-pointer text-sm">
+                    {{ c }}
+                </div>
+                {% endfor %}
+            </div>
+            <input type="hidden" x-ref="countryInput" name="action_value" value="{{ val|default:" 🇺🇸 US" }}"
+                hx-post="{% url 'update_status' item.id col.id %}" hx-trigger="change" hx-target="#item-{{ item.id }}"
+                hx-swap="outerHTML">
+        </div>
+
+        {% elif col.type == 'color_picker' %}
+        <div class="h-full px-2 flex items-center justify-center">
+            <div class="relative group/color">
+                <input type="color" value="{{ val|default:'#3b82f6' }}"
+                    class="opacity-0 w-8 h-8 absolute inset-0 cursor-pointer z-10"
+                    onchange="this.nextElementSibling.style.backgroundColor = this.value; htmx.trigger(this, 'change')"
+                    hx-post="{% url 'update_status' item.id col.id %}" hx-trigger="change"
+                    hx-target="#item-{{ item.id }}" hx-swap="outerHTML" name="action_value">
+                <div class="w-6 h-6 rounded-full border border-slate-200 shadow-sm"
+                    style="background-color: {{ val|default:'#3b82f6' }}"></div>
+            </div>
+        </div>
+
+        {% elif col.type == 'time_tracking' %}
+        <div x-data="{ running: {{ val|yesno:'true,false'|default:'false' }}, time: 0, timer: null }"
+            x-init="if(running) timer = setInterval(() => time++, 1000)"
+            class="h-full px-2 flex items-center justify-center gap-2">
+
+            <button
+                @click="running = !running; if(running) { timer = setInterval(() => time++, 1000); } else { clearInterval(timer); } $nextTick(() => { $refs.ttInput.value = running ? 'true' : 'false'; htmx.trigger($refs.ttInput, 'change'); })"
+                class="w-6 h-6 rounded-full flex items-center justify-center text-white transition-colors"
+                :class="running ? 'bg-red-500 hover:bg-red-600' : 'bg-green-500 hover:bg-green-600'">
+                <svg x-show="!running" class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+                    <path
+                        d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 00.555.832l3 2a1 1 0 001.157-1.576l-3-2V8.832z" />
+                </svg>
+                <svg x-show="running" class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+                    <path fill-rule="evenodd"
+                        d="M10 18a8 8 0 100-16 8 8 0 000 16zM8 7a1 1 0 00-1 1v4a1 1 0 001 1h4a1 1 0 001-1V8a1 1 0 00-1-1H8z"
+                        clip-rule="evenodd" />
+                </svg>
+            </button>
+            <div class="font-mono text-sm text-slate-700 w-12 text-center">
+                <span x-text="new Date(time * 1000).toISOString().substr(14, 5)">00:00</span>
+            </div>
+            <input type="hidden" x-ref="ttInput" name="action_value" value="{{ val|default:'false' }}"
+                hx-post="{% url 'update_status' item.id col.id %}" hx-trigger="change" hx-target="#item-{{ item.id }}"
+                hx-swap="outerHTML">
+        </div>
+
+        {% elif col.type == 'dropdown' %}
+        <div x-data="{ open: false, selected: '{{ val|default:'-' }}' }"
+            class="relative h-full px-2 flex items-center justify-center">
+            <div @click="open = !open"
+                class="cursor-pointer hover:bg-slate-100 px-2 py-1 rounded-full bg-slate-50 border border-slate-200 flex items-center gap-1 text-xs font-medium text-slate-600 min-w-[80px] justify-center">
+                <span x-text="selected"></span>
+                <svg class="w-3 h-3 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                </svg>
+            </div>
+            <div x-show="open" @click.outside="open = false" style="display: none;"
+                class="absolute top-full left-0 bg-white shadow-xl border border-slate-100 rounded-lg z-50 py-1 w-40 animate-fade-in group-hover:block">
+                {% with choices=col.settings.choices|default:'' %}
+                {% if choices %}
+                {% for choice in choices %}
+                <div @click="selected = '{{ choice }}'; open = false; $nextTick(() => { $refs.ddInput.value = '{{ choice }}'; htmx.trigger($refs.ddInput, 'change') })"
+                    class="px-3 py-1.5 hover:bg-slate-50 cursor-pointer text-sm font-medium text-slate-700">
+                    {{ choice }}
+                </div>
+                {% endfor %}
+                {% else %}
+                <div class="px-3 py-2 text-xs text-slate-400 italic text-center">No options defined</div>
+                {% endif %}
+                {% endwith %}
+            </div>
+            <input type="hidden" x-ref="ddInput" name="action_value" value="{{ val|default:'' }}"
+                hx-post="{% url 'update_status' item.id col.id %}" hx-trigger="change" hx-target="#item-{{ item.id }}"
+                hx-swap="outerHTML">
+        </div>
+
+        {% elif col.type == 'week' %}
+        <div class="h-full px-2 flex items-center justify-center">
+            <input type="week" value="{{ val|default:'' }}"
+                class="bg-transparent border-none text-xs font-medium text-slate-600 focus:ring-0 p-0 text-center w-full cursor-pointer hover:bg-slate-100 rounded py-1 transition-colors"
+                hx-post="{% url 'update_status' item.id col.id %}" hx-trigger="change" hx-target="#item-{{ item.id }}"
+                hx-swap="outerHTML" name="action_value">
+        </div>
+
+        {% elif col.type == 'hour' %}
+        <div class="h-full px-2 flex items-center justify-center">
+            <input type="time" value="{{ val|default:'' }}"
+                class="bg-transparent border-none text-sm font-medium text-slate-600 focus:ring-0 p-0 text-center w-full cursor-pointer hover:bg-slate-100 rounded py-1 transition-colors"
+                hx-post="{% url 'update_status' item.id col.id %}" hx-trigger="change" hx-target="#item-{{ item.id }}"
+                hx-swap="outerHTML" name="action_value">
+        </div>
+
+        {% elif col.type == 'dependency' or col.type == 'connect_boards' %}
+        <div x-data="{ 
+                open: false, 
+                selectedIds: {{ val.ids|default:'[]' }}, 
+                selectedNames: {{ val.names|default:'[]'|safe }}, 
+                toggleItem(id, name) {
+                    if (this.selectedIds.includes(id)) {
+                        this.selectedIds = this.selectedIds.filter(i => i !== id);
+                        let idx = this.selectedNames.indexOf(name);
+                        if (idx > -1) this.selectedNames.splice(idx, 1);
+                    } else {
+                        this.selectedIds.push(id);
+                        this.selectedNames.push(name);
+                    }
+                },
+                save() {
+                    let payload = JSON.stringify({ids: this.selectedIds, names: this.selectedNames});
+                    $refs.depInput.value = payload; 
+                    htmx.trigger($refs.depInput, 'change');
+                }
+            }" class="relative h-full px-2 flex items-center justify-center">
+
+            <!-- Display Trigger -->
+            <div @click="open = !open; if(open) htmx.ajax('GET', '/api/board/{{ item.group.board.id }}/items/', {target: '#picker-{{ item.id }}-{{ col.id }}'})"
+                class="cursor-pointer hover:bg-slate-100 px-2 py-1 rounded-full bg-slate-50 border border-slate-200 flex items-center gap-1 text-xs font-medium text-slate-600 min-w-[80px] justify-center truncate max-w-full">
+                <span x-text="selectedNames.length ? (selectedNames.length + ' Items') : '{{ col.type|title }}'"
+                    class="truncate"></span>
+                <svg class="w-3 h-3 text-slate-400 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101" />
+                </svg>
+            </div>
+
+            <!-- Dropdown -->
+            <div x-show="open" @click.outside="open = false; save()" style="display: none;"
+                class="absolute top-full left-0 bg-white shadow-xl border border-slate-100 rounded-lg z-50 w-64 max-h-60 overflow-y-auto animate-fade-in text-left">
+                <div id="picker-{{ item.id }}-{{ col.id }}" class="min-h-[50px]">
+                    <div class="p-2 text-center text-xs text-slate-400">Loading...</div>
+                </div>
+            </div>
+
+            <input type="hidden" x-ref="depInput" name="action_value" hx-post="{% url 'update_status' item.id col.id %}"
+                hx-trigger="change" hx-target="#item-{{ item.id }}" hx-swap="outerHTML">
+        </div>
+
+        {% elif col.type == 'formula' %}
+        <div x-data="{ editing: false }" class="h-full px-2 flex items-center justify-center group relative">
+            <!-- Result Display -->
+            <div x-show="!editing" @click="editing = true; $nextTick(() => $refs.fInput.focus())"
+                class="cursor-pointer w-full text-center hover:bg-slate-100 rounded py-1 px-2 border border-transparent hover:border-slate-200 transition-colors">
+                {% with res_key=col.id|stringformat:"s"|add:"_result" %}
+                {% with result=item.values|get_value:res_key %}
+                {% if result is not None %}
+                <span class="font-bold text-slate-700">{{ result }}</span>
+                {% else %}
+                <span class="text-xs text-slate-400 italic">Empty</span>
+                {% endif %}
+                {% endwith %}
+                {% endwith %}
+            </div>
+
+            <!-- Edit Input -->
+            <div x-show="editing" style="display: none;"
+                class="flex items-center gap-1 w-full absolute inset-0 bg-white z-10 px-2">
+                <div
+                    class="text-[10px] font-mono text-slate-500 bg-slate-100 px-1 py-0.5 rounded border border-slate-200">
+                    ƒx</div>
+                <input x-ref="fInput" type="text" value="{{ val|default:'=' }}" placeholder="= 2 + 2"
+                    @blur="editing = false" @keydown.enter="editing = false"
+                    class="bg-transparent border-none text-xs font-medium text-slate-600 focus:ring-0 p-0 w-full hover:bg-slate-50 rounded transition-colors"
+                    hx-post="{% url 'update_status' item.id col.id %}" hx-trigger="change"
+                    hx-target="#item-{{ item.id }}" hx-swap="outerHTML" name="action_value">
+            </div>
+        </div>
         {% else %}
         <div
             class="h-full min-h-[40px] px-2 flex items-center justify-center truncate hover:bg-slate-50 text-sm font-medium text-slate-700 transition-colors">
@@ -469,16 +749,12 @@
     </td>
     {% endfor %}
     <td class="px-4 py-2 text-center bg-white/40 border-r border-transparent">
-        <form method="POST" action="{% url 'delete_item' item.group.board.id item.id %}"
-            onsubmit="return confirm('Delete this item?');"
-            class="opacity-0 group-hover:opacity-100 transition-opacity">
-            {% csrf_token %}
-            <button type="submit"
-                class="text-slate-300 hover:text-red-500 transition-all hover:bg-red-50 p-1.5 rounded-lg">
-                <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-                </svg>
-            </button>
-        </form>
+        <button hx-post="{% url 'delete_item' item.group.board.id item.id %}" hx-confirm="Delete this item?"
+            hx-target="#item-{{ item.id }}" hx-swap="delete"
+            class="opacity-0 group-hover:opacity-100 transition-all text-slate-300 hover:text-red-500 hover:bg-red-50 p-1.5 rounded-lg">
+            <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+            </svg>
+        </button>
     </td>
 </tr>

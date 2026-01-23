@@ -1,31 +1,44 @@
 from django.contrib import admin
+from django.contrib.auth.admin import UserAdmin
 from .models import User, Organization, Membership, Notification
 from .saas_models import PricingPlan, BillingProfile, RolePermission
+
+@admin.register(User)
+class CustomUserAdmin(UserAdmin):
+    list_display = ('username', 'email', 'is_staff', 'is_admin', 'is_manager')
+    fieldsets = UserAdmin.fieldsets + (
+        ('Roles', {'fields': ('is_admin', 'is_manager', 'is_verified', 'avatar')}),
+    )
 
 @admin.register(Organization)
 class OrganizationAdmin(admin.ModelAdmin):
     list_display = ('name', 'owner', 'created_at')
-    search_fields = ('name', 'owner__email')
+    search_fields = ('name', 'owner__username')
+
+@admin.register(Membership)
+class MembershipAdmin(admin.ModelAdmin):
+    list_display = ('user', 'organization', 'role', 'joined_at')
+    list_filter = ('role',)
+
+class PlanFeatureInline(admin.TabularInline):
+    from core.saas_models import PlanFeature
+    model = PlanFeature
+    extra = 1
 
 @admin.register(PricingPlan)
 class PricingPlanAdmin(admin.ModelAdmin):
-    list_display = ('name', 'price', 'is_popular', 'created_at')
-    list_editable = ('price', 'is_popular')
-    search_fields = ('name',)
-
-@admin.register(RolePermission)
-class RolePermissionAdmin(admin.ModelAdmin):
-    list_display = ('role', 'can_create_board', 'can_invite_users', 'can_manage_billing')
-    list_editable = ('can_create_board', 'can_invite_users', 'can_manage_billing')
+    list_display = ('name', 'price', 'interval', 'max_boards', 'is_active', 'order')
+    list_editable = ('price', 'is_active', 'order')
+    prepopulated_fields = {'slug': ('name',)}
+    inlines = [PlanFeatureInline]
 
 @admin.register(BillingProfile)
 class BillingProfileAdmin(admin.ModelAdmin):
-    list_display = ('organization', 'plan_name', 'is_active', 'next_payment_due')
-    list_filter = ('plan_name', 'is_active')
-    search_fields = ('organization__name',)
+    list_display = ('organization', 'plan', 'is_active', 'next_payment_due')
 
-admin.site.register(Membership)
+@admin.register(RolePermission)
+class RolePermissionAdmin(admin.ModelAdmin):
+    list_display = ('role', 'can_create_board', 'can_create_automation')
+    list_editable = ('can_create_board', 'can_create_automation')
+
 admin.site.register(Notification)
-# User is often registered by generic EntityAdmin or UserAdmin, but explicit registration helps if custom User model
-from django.contrib.auth.admin import UserAdmin
-admin.site.register(User, UserAdmin)

@@ -1,0 +1,89 @@
+{% for field in schema %}
+<div class="inline-flex items-center mx-1 relative group" x-data="{ open: false, selected: '' }">
+    <input type="hidden" name="{{ prefix }}{{ field.name }}" x-model="selected">
+
+    {% if field.type == 'column' %}
+    <!-- Column Selector -->
+    {% with cols=board.columns.all %}
+    <button type="button" @click="open = !open"
+        class="px-2 py-1 rounded bg-slate-100 border-b-2 border-slate-300 text-slate-700 hover:bg-slate-200 transition-all font-bold text-sm"
+        x-text="selected ? document.getElementById('col-{{ prefix }}-'+selected).innerText : '[{{ field.label }}]'">
+        [{{ field.label }}]
+    </button>
+
+    <div x-show="open" @click.outside="open = false"
+        class="absolute top-full left-0 mt-2 w-56 bg-white rounded-xl shadow-xl ring-1 ring-black/5 z-50 overflow-hidden">
+        <div class="max-h-56 overflow-y-auto">
+            {% for col in cols %}
+            <!-- Filter by param if needed (e.g. only status columns) -->
+            {% if field.param and col.type != field.param %}
+            <!-- Skip if type doesn't match -->
+            {% else %}
+            <div @click="selected = '{{ col.id }}'; open = false" id="col-{{ prefix }}-{{ col.id }}"
+                class="px-4 py-2 hover:bg-slate-50 cursor-pointer text-sm font-medium flex items-center gap-2">
+                <!-- Icon based on type -->
+                <span class="text-xs uppercase text-slate-400">[{{ col.type }}]</span>
+                {{ col.title }}
+            </div>
+            {% endif %}
+            {% endfor %}
+        </div>
+    </div>
+    {% endwith %}
+
+    {% elif field.type == 'value' %}
+    <!-- Value Selector (Assuming textual for now or fetching options) -->
+    <!-- Ideally this depends on the selected column, but for MVP we input text or standard list -->
+    <input type="text" x-model="selected" placeholder="{{ field.label }}"
+        class="px-2 py-1 w-32 rounded bg-white border-b-2 border-indigo-200 focus:border-indigo-500 focus:outline-none text-indigo-700 font-bold text-sm placeholder-indigo-300">
+
+    {% elif field.type == 'group' %}
+    <!-- Group Selector -->
+    <button type="button" @click="open = !open"
+        class="px-2 py-1 rounded bg-yellow-50 border-b-2 border-yellow-200 text-yellow-700 hover:bg-yellow-100 transition-all font-bold text-sm"
+        x-text="selected ? document.getElementById('grp-{{ prefix }}-'+selected).innerText : '[{{ field.label }}]'">
+        [{{ field.label }}]
+    </button>
+
+    <div x-show="open" @click.outside="open = false"
+        class="absolute top-full left-0 mt-2 w-56 bg-white rounded-xl shadow-xl ring-1 ring-black/5 z-50 overflow-hidden">
+        {% for grp in board.groups.all %}
+        <div @click="selected = '{{ grp.id }}'; open = false" id="grp-{{ prefix }}-{{ grp.id }}"
+            class="px-4 py-2 hover:bg-yellow-50 cursor-pointer text-sm font-medium flex items-center gap-2">
+            <span class="w-3 h-3 rounded-full" style="background-color: {{ grp.color }}"></span>
+            {{ grp.title }}
+        </div>
+        {% endfor %}
+    </div>
+
+    {% elif field.type == 'user' %}
+    <!-- User Selector -->
+    <button type="button" @click="open = !open"
+        class="px-2 py-1 rounded bg-blue-50 border-b-2 border-blue-200 text-blue-700 hover:bg-blue-100 transition-all font-bold text-sm"
+        x-text="selected ? document.getElementById('usr-{{ prefix }}-'+selected).innerText : '[{{ field.label }}]'">
+        [{{ field.label }}]
+    </button>
+
+    <div x-show="open" @click.outside="open = false"
+        class="absolute top-full left-0 mt-2 w-56 bg-white rounded-xl shadow-xl ring-1 ring-black/5 z-50 overflow-hidden">
+        {% with members=board.workspace.organization.memberships.all %}
+        {% for mem in members %}
+        <div @click="selected = '{{ mem.user.id }}'; open = false" id="usr-{{ prefix }}-{{ mem.user.id }}"
+            class="px-4 py-2 hover:bg-blue-50 cursor-pointer text-sm font-medium flex items-center gap-2">
+            <div class="w-6 h-6 rounded-full bg-slate-200 flex items-center justify-center text-xs">{{
+                mem.user.username|slice:":1" }}</div>
+            {{ mem.user.username }}
+        </div>
+        {% endfor %}
+        {% endwith %}
+    </div>
+
+    {% else %}
+    <!-- Fallback Text Input -->
+    <input type="text" name="{{ prefix }}{{ field.name }}" placeholder="{{ field.label }}"
+        class="px-2 py-1 rounded bg-slate-50 border border-slate-200 text-sm">
+    {% endif %}
+
+    <span class="ml-1 text-slate-800 font-bold">,</span>
+</div>
+{% endfor %}

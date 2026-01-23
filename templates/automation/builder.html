@@ -1,269 +1,255 @@
-{% extends "base.html" %}
+{% extends base_template|default:'base.html' %}
+{% load static %}
 
 {% block content %}
-<div class="h-screen flex flex-col bg-white overflow-hidden" x-data="{ 
-    activeTab: 'create', 
-    showBuilder: false, 
-    triggerType: '', 
-    actionType: '' 
-}">
-    <!-- Header -->
-    <div class="h-16 border-b border-slate-200 flex items-center justify-between px-6 bg-white shrink-0 z-10">
-        <div class="flex items-center gap-4">
-            <h1 class="text-xl font-semibold text-slate-800">Automations</h1>
-            <span class="text-slate-400">|</span>
-            <span class="text-slate-600 font-medium">{{ board.name }}</span>
-        </div>
-        <div class="flex bg-slate-100 p-1 rounded-lg">
-            <button @click="activeTab = 'create'"
-                :class="{ 'bg-white shadow-sm text-indigo-600': activeTab === 'create', 'text-slate-500 hover:text-slate-700': activeTab !== 'create' }"
-                class="px-6 py-1.5 text-sm font-medium rounded-md transition-all">
-                Create
-            </button>
-            <button @click="window.location.href='{% url 'automation_list' board.id %}'"
-                class="px-6 py-1.5 text-sm font-medium rounded-md text-slate-500 hover:text-slate-700 hover:bg-white/50 transition-all">
-                Manage
-            </button>
-        </div>
-        <div class="flex items-center gap-3">
-            <button @click="history.back()" class="text-slate-400 hover:text-slate-600">
-                <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-                </svg>
-            </button>
-        </div>
-    </div>
+<div class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 backdrop-blur-sm p-4 animate-fade-in">
+    <div class="flex h-[80vh] w-[90vw] max-w-6xl bg-white rounded-xl shadow-2xl overflow-hidden animate-scale-in">
 
-    <div class="flex-1 flex overflow-hidden">
         <!-- Sidebar -->
-        <div class="w-64 border-r border-slate-200 bg-slate-50 flex flex-col py-6 overflow-y-auto shrink-0"
-            x-show="!showBuilder">
-            <div class="px-6 mb-6">
-                <h3 class="text-xs font-bold text-slate-900 uppercase tracking-wider mb-4">Categories</h3>
-                <nav class="space-y-1">
-                    <button
-                        class="w-full text-left px-3 py-2 rounded-md bg-indigo-50 text-indigo-700 font-medium text-sm flex items-center gap-3">
+        <div class="w-64 bg-slate-50 border-r border-slate-200 flex flex-col">
+            <div class="p-6 border-b border-slate-200/50">
+                <div class="flex items-center gap-3 text-slate-800 font-bold text-xl">
+                    <div
+                        class="w-8 h-8 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-lg flex items-center justify-center text-white shadow-sm">
                         <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                 d="M13 10V3L4 14h7v7l9-11h-7z" />
                         </svg>
-                        Explore
-                    </button>
-                    <button
-                        class="w-full text-left px-3 py-2 rounded-md text-slate-600 hover:bg-slate-100 hover:text-slate-900 text-sm flex items-center gap-3">
-                        <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
-                        </svg>
-                        Notifications
-                    </button>
-                    <button
-                        class="w-full text-left px-3 py-2 rounded-md text-slate-600 hover:bg-slate-100 hover:text-slate-900 text-sm flex items-center gap-3">
-                        <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" />
-                        </svg>
-                        Status Changes
-                    </button>
-                    <button
-                        class="w-full text-left px-3 py-2 rounded-md text-slate-600 hover:bg-slate-100 hover:text-slate-900 text-sm flex items-center gap-3">
-                        <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                        </svg>
-                        Due Dates
-                    </button>
-                </nav>
+                    </div>
+                    Automations
+                </div>
+            </div>
+
+            <nav class="flex-1 p-4 space-y-1 overflow-y-auto">
+                <a href="#"
+                    class="flex items-center gap-3 px-3 py-2.5 bg-indigo-50 text-indigo-700 rounded-lg font-medium">
+                    <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+                    </svg>
+                    Automation Center
+                </a>
+                <a href="{% url 'automation_list' board.id %}"
+                    class="flex items-center gap-3 px-3 py-2.5 text-slate-600 hover:bg-slate-100 rounded-lg font-medium transition-colors">
+                    <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+                    </svg>
+                    Board Automations
+                    <span class="ml-auto bg-slate-200 text-slate-600 px-2 py-0.5 rounded-full text-xs font-bold">{{
+                        board.automations.count }}</span>
+                </a>
+            </nav>
+
+            <div class="p-4 border-t border-slate-200">
+                <a href="{% url 'board_detail' board.id %}"
+                    class="flex w-full items-center justify-center gap-2 px-4 py-2 bg-white border border-slate-300 rounded-lg text-slate-700 font-medium hover:bg-slate-50 transition-colors">
+                    Back to Board
+                </a>
             </div>
         </div>
 
-        <!-- Main Gallery Content -->
-        <div class="flex-1 p-8 overflow-y-auto scrollbar-thin scrollbar-thumb-slate-200" x-show="!showBuilder">
-            <div class="max-w-6xl mx-auto">
-                <div class="mb-8">
-                    <h2 class="text-2xl font-semibold text-slate-800">Start with the basics</h2>
-                    <p class="text-slate-500 mt-1">Pick a recommended recipe or start from scratch.</p>
+        <!-- Main Content (Builder) -->
+        <div class="flex-1 flex flex-col bg-white">
+            <!-- Header -->
+            <div class="px-8 py-6 border-b border-slate-100 flex items-center justify-between">
+                <div>
+                    <h1 class="text-2xl font-bold text-slate-800">Create Custom Automation</h1>
+                    <p class="text-slate-500 mt-1">Build your own flow using the sentence builder below.</p>
                 </div>
-
-                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-
-                    <!-- Create Scratch Card -->
-                    <div @click="showBuilder = true; triggerType = ''; actionType = ''"
-                        class="bg-white rounded-xl border-2 border-dashed border-slate-300 hover:border-indigo-400 hover:bg-indigo-50/50 p-6 flex flex-col items-center justify-center text-center cursor-pointer transition-all h-64 group">
-                        <div
-                            class="w-14 h-14 bg-indigo-100 text-indigo-600 rounded-full flex items-center justify-center mb-4 group-hover:bg-indigo-600 group-hover:text-white transition-colors shadow-sm">
-                            <svg class="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                    d="M12 4v16m8-8H4" />
-                            </svg>
-                        </div>
-                        <h3 class="text-lg font-semibold text-slate-800">Create from scratch</h3>
-                        <p class="text-sm text-slate-500 mt-2">Build your own custom automation</p>
-                    </div>
-
-                    <!-- Recipe Card 1: Status -> Email -->
-                    <div
-                        class="bg-white rounded-xl border border-slate-200 shadow-sm hover:shadow-md transition-all p-6 flex flex-col h-64 relative overflow-hidden group">
-                        <div class="absolute top-0 left-0 w-1 h-full bg-blue-500"></div>
-                        <div class="mb-4">
-                            <img src="https://cdn.monday.com/images/automations/store/templates_icons/status_change.png"
-                                class="w-10 h-10 mb-2" onerror="this.remove()">
-                            <!-- Fallback Icon if image fails -->
-                            <div
-                                class="w-10 h-10 bg-blue-100 text-blue-600 rounded-lg flex items-center justify-center mb-2">
-                                <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                        d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-                                </svg>
-                            </div>
-                        </div>
-                        <div class="text-lg text-slate-800 leading-snug mb-auto">
-                            When <span class="font-bold text-slate-900">status</span> changes to <span
-                                class="font-bold text-slate-900">something</span>, send an <span
-                                class="font-bold text-slate-900">email</span> to <span
-                                class="font-bold text-slate-900">Board Owner</span>.
-                        </div>
-                        <button @click="showBuilder = true; triggerType = 'status_change'; actionType = 'send_email'"
-                            class="mt-4 w-full py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 font-medium rounded-lg transition-colors opacity-0 group-hover:opacity-100">
-                            Use template
-                        </button>
-                    </div>
-
-                    <!-- Recipe Card 2: Status -> Status -->
-                    <div
-                        class="bg-white rounded-xl border border-slate-200 shadow-sm hover:shadow-md transition-all p-6 flex flex-col h-64 relative overflow-hidden group">
-                        <div class="absolute top-0 left-0 w-1 h-full bg-purple-500"></div>
-                        <div class="mb-4">
-                            <div
-                                class="w-10 h-10 bg-purple-100 text-purple-600 rounded-lg flex items-center justify-center mb-2">
-                                <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                        d="M19.428 15.428a2 2 0 00-1.022-.547l-2.384-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z" />
-                                </svg>
-                            </div>
-                        </div>
-                        <div class="text-lg text-slate-800 leading-snug mb-auto">
-                            When <span class="font-bold text-slate-900">status</span> changes to <span
-                                class="font-bold text-slate-900">something</span>, change <span
-                                class="font-bold text-slate-900">another status</span> to <span
-                                class="font-bold text-slate-900">something</span>.
-                        </div>
-                        <button @click="showBuilder = true; triggerType = 'status_change'; actionType = 'change_status'"
-                            class="mt-4 w-full py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 font-medium rounded-lg transition-colors opacity-0 group-hover:opacity-100">
-                            Use template
-                        </button>
-                    </div>
-
-                    <!-- Recipe Card 3: Date -> Email -->
-                    <div
-                        class="bg-white rounded-xl border border-slate-200 shadow-sm hover:shadow-md transition-all p-6 flex flex-col h-64 relative overflow-hidden group">
-                        <div class="absolute top-0 left-0 w-1 h-full bg-orange-500"></div>
-                        <div class="mb-4">
-                            <div
-                                class="w-10 h-10 bg-orange-100 text-orange-600 rounded-lg flex items-center justify-center mb-2">
-                                <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                        d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                                </svg>
-                            </div>
-                        </div>
-                        <div class="text-lg text-slate-800 leading-snug mb-auto">
-                            When <span class="font-bold text-slate-900">date</span> arrives, send an <span
-                                class="font-bold text-slate-900">email</span> to <span
-                                class="font-bold text-slate-900">Assigned User</span>.
-                        </div>
-                        <button
-                            class="mt-4 w-full py-2 bg-slate-100 text-slate-400 font-medium rounded-lg cursor-not-allowed opacity-0 group-hover:opacity-100">
-                            Coming Soon
-                        </button>
-                    </div>
-
+                <div class="flex items-center gap-3">
+                    <button type="button" onclick="document.getElementById('automation-modal-container').innerHTML = ''"
+                        class="text-slate-500 hover:text-slate-700 font-medium px-4 py-2 hover:bg-slate-50 rounded-lg transition-colors">Cancel</button>
+                    <button onclick="document.getElementById('automation-form').submit()"
+                        class="bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-2.5 rounded-lg font-bold shadow-lg shadow-indigo-200 transition-all transform hover:scale-105 active:scale-95 flex items-center gap-2">
+                        <span>Create Automation</span>
+                        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                        </svg>
+                    </button>
                 </div>
             </div>
-        </div>
 
-        <!-- Hidden Builder Section (Shows on click) -->
-        <div class="flex-1 bg-white flex flex-col items-center justify-center relative p-8" x-show="showBuilder"
-            x-transition:enter="transition ease-out duration-300 transform"
-            x-transition:enter-start="translate-y-10 opacity-0" x-transition:enter-end="translate-y-0 opacity-100">
-            <button @click="showBuilder = false"
-                class="absolute top-6 left-6 text-slate-500 hover:text-slate-800 flex items-center gap-2">
-                <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                        d="M10 19l-7-7m0 0l7-7m-7 7h18" />
-                </svg>
-                Back to gallery
-            </button>
+            <!-- Builder Area -->
+            <div class="flex-1 p-8 bg-slate-50/50 overflow-y-auto flex items-center justify-center">
 
-            <!-- The Previous Form Logic, but styled nicely -->
-            <div class="w-full max-w-3xl bg-white rounded-2xl shadow-2xl border border-slate-100 overflow-hidden">
-                <div class="bg-indigo-600 p-6 text-white text-center">
-                    <h2 class="text-2xl font-bold">Configure Automation</h2>
-                    <p class="opacity-80 mt-1">Define your logic below</p>
-                </div>
-
-                <form method="POST" class="p-8 space-y-8">
+                <form id="automation-form" method="POST" action="." class="w-full max-w-4xl" x-data="{ 
+                          trigger: null, 
+                          triggerName: 'This happens...',
+                          action: null, 
+                          actionName: 'Do this...'
+                      }">
                     {% csrf_token %}
+                    <input type="hidden" name="trigger" x-model="trigger">
+                    <input type="hidden" name="action" x-model="action">
 
-                    <!-- Sentence Builder Visual -->
-                    <div class="text-2xl text-slate-800 leading-relaxed font-medium text-center">
-                        When
-                        <span class="inline-block relative">
-                            <select name="trigger" x-model="triggerType" required
-                                class="appearance-none bg-blue-50 border-b-2 border-blue-500 text-blue-700 py-1 px-3 rounded focus:outline-none focus:bg-blue-100 font-bold mx-1 cursor-pointer">
-                                <option value="" disabled selected>...this happens...</option>
-                                {% for trigger in triggers %}
-                                <option value="{{ trigger.code }}">{{ trigger.name }}</option>
-                                {% endfor %}
-                            </select>
-                        </span>
+                    <div
+                        class="bg-white rounded-2xl shadow-xl ring-1 ring-slate-900/5 p-12 min-h-[300px] flex flex-col items-center justify-center gap-10 transition-all hover:shadow-2xl">
 
-                        <!-- Dynamic Trigger Value Input -->
-                        <span x-show="triggerType == 'status_change'" class="inline-block">
-                            changes to
-                            <select name="trigger_value"
-                                class="appearance-none bg-white border-b-2 border-slate-300 text-slate-700 py-1 px-3 rounded focus:outline-none focus:border-indigo-500 font-bold mx-1">
-                                {% for opt in status_options %}
-                                <option value="{{ opt }}">{{ opt }}</option>
-                                {% endfor %}
-                            </select>
-                        </span>
+                        <!-- The Sentence -->
+                        <div
+                            class="flex flex-wrap items-center justify-center gap-4 text-2xl md:text-3xl font-medium text-slate-300">
 
-                        <br class="mb-4 block">
+                            <!-- Static 'When' -->
+                            <span class="text-slate-700 font-bold">When</span>
 
-                        Then
-                        <span class="inline-block relative">
-                            <select name="action" x-model="actionType" required
-                                class="appearance-none bg-purple-50 border-b-2 border-purple-500 text-purple-700 py-1 px-3 rounded focus:outline-none focus:bg-purple-100 font-bold mx-1 cursor-pointer">
-                                <option value="" disabled selected>...do this...</option>
-                                {% for action in actions %}
-                                <option value="{{ action.code }}">{{ action.name }}</option>
-                                {% endfor %}
-                            </select>
-                        </span>
+                            <!-- TRIGGER PILL -->
+                            <div class="relative" x-data="{ open: false }">
+                                <button type="button" @click="open = !open"
+                                    class="group flex items-center gap-3 px-5 py-3 rounded-full transition-all duration-200 border shadow-sm"
+                                    :class="trigger ? 'bg-purple-100 text-purple-700 border-purple-200 hover:bg-purple-200' : 'bg-slate-100 text-slate-500 border-dashed border-slate-300 hover:border-slate-400 hover:text-slate-600'">
 
-                        <!-- Dynamic Action Value Input -->
-                        <span x-show="actionType == 'change_status'" class="inline-block">
-                            to
-                            <select name="action_value"
-                                class="appearance-none bg-white border-b-2 border-slate-300 text-slate-700 py-1 px-3 rounded focus:outline-none focus:border-indigo-500 font-bold mx-1">
-                                {% for opt in status_options %}
-                                <option value="{{ opt }}">{{ opt }}</option>
-                                {% endfor %}
-                            </select>
-                        </span>
+                                    <template x-if="trigger">
+                                        <div
+                                            class="w-6 h-6 rounded-full bg-purple-200 flex items-center justify-center text-purple-600">
+                                            <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24"
+                                                stroke="currentColor">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5"
+                                                    d="M13 10V3L4 14h7v7l9-11h-7z" />
+                                            </svg>
+                                        </div>
+                                    </template>
+
+                                    <span class="font-bold tracking-tight" x-text="triggerName"></span>
+
+                                    <svg class="w-4 h-4 opacity-50 transition-transform duration-200"
+                                        :class="{'rotate-180': open}" fill="none" viewBox="0 0 24 24"
+                                        stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M19 9l-7 7-7-7" />
+                                    </svg>
+                                </button>
+
+                                <!-- Trigger Popover -->
+                                <div x-show="open" @click.outside="open = false"
+                                    x-transition:enter="transition ease-out duration-200"
+                                    x-transition:enter-start="opacity-0 translate-y-2"
+                                    x-transition:enter-end="opacity-100 translate-y-0"
+                                    class="absolute left-1/2 -translate-x-1/2 top-full mt-4 w-[400px] bg-white rounded-2xl shadow-2xl ring-1 ring-black/5 z-50 overflow-hidden text-base text-left">
+
+                                    <div class="p-4 bg-slate-50 border-b border-slate-100">
+                                        <h3 class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">
+                                            Choose a Trigger</h3>
+                                        <input type="text" placeholder="Search triggers..."
+                                            class="w-full px-3 py-2 bg-white border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-purple-500/20 focus:border-purple-500">
+                                    </div>
+
+                                    <div class="max-h-[320px] overflow-y-auto p-2">
+                                        {% for t in triggers %}
+                                        <div @click="trigger = '{{ t.code }}'; triggerName = '{{ t.name }}'; open = false; $dispatch('trigger-selected', '{{ t.code }}')"
+                                            class="flex items-center gap-4 p-3 hover:bg-purple-50 rounded-xl cursor-pointer transition-colors group">
+                                            <div
+                                                class="w-10 h-10 rounded-lg bg-purple-100 text-purple-600 flex items-center justify-center group-hover:bg-purple-200 group-hover:scale-110 transition-all duration-200">
+                                                <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24"
+                                                    stroke="currentColor">
+                                                    <path stroke-linecap="round" stroke-linejoin="round"
+                                                        stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
+                                                </svg>
+                                            </div>
+                                            <div>
+                                                <div class="font-bold text-slate-800">{{ t.name }}</div>
+                                                <div class="text-xs text-slate-500 mt-0.5">{{ t.description }}</div>
+                                            </div>
+                                        </div>
+                                        {% endfor %}
+                                    </div>
+                                </div>
+                            </div>
+                            <!-- End Trigger Pill -->
+
+
+                            <!-- Dynamic Trigger Config Area -->
+                            <div id="trigger-config-area" class="empty:hidden animate-fade-in flex items-center gap-2">
+                            </div>
+
+
+                            <!-- Connector -->
+                            <span class="text-slate-700 font-bold transition-opacity duration-300"
+                                :class="trigger ? 'opacity-100' : 'opacity-30'">, then</span>
+
+
+                            <!-- ACTION PILL -->
+                            <!-- Only interactive if trigger is selected -->
+                            <div class="relative transition-all duration-300" x-data="{ open: false }"
+                                :class="trigger ? 'opacity-100' : 'opacity-30 pointer-events-none grayscale'">
+
+                                <button type="button" @click="open = !open"
+                                    class="group flex items-center gap-3 px-5 py-3 rounded-full transition-all duration-200 border shadow-sm"
+                                    :class="action ? 'bg-orange-100 text-orange-700 border-orange-200 hover:bg-orange-200' : 'bg-slate-100 text-slate-500 border-dashed border-slate-300 hover:border-slate-400 hover:text-slate-600'">
+
+                                    <template x-if="action">
+                                        <div
+                                            class="w-6 h-6 rounded-full bg-orange-200 flex items-center justify-center text-orange-600">
+                                            <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24"
+                                                stroke="currentColor">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5"
+                                                    d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                                            </svg>
+                                        </div>
+                                    </template>
+
+                                    <span class="font-bold tracking-tight" x-text="actionName"></span>
+
+                                    <svg class="w-4 h-4 opacity-50 transition-transform duration-200"
+                                        :class="{'rotate-180': open}" fill="none" viewBox="0 0 24 24"
+                                        stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M19 9l-7 7-7-7" />
+                                    </svg>
+                                </button>
+
+                                <!-- Action Popover -->
+                                <div x-show="open" @click.outside="open = false"
+                                    x-transition:enter="transition ease-out duration-200"
+                                    x-transition:enter-start="opacity-0 translate-y-2"
+                                    x-transition:enter-end="opacity-100 translate-y-0"
+                                    class="absolute left-1/2 -translate-x-1/2 top-full mt-4 w-[400px] bg-white rounded-2xl shadow-2xl ring-1 ring-black/5 z-50 overflow-hidden text-base text-left">
+
+                                    <div class="p-4 bg-slate-50 border-b border-slate-100">
+                                        <h3 class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">
+                                            Choose an Action</h3>
+                                        <input type="text" placeholder="Search actions..."
+                                            class="w-full px-3 py-2 bg-white border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500">
+                                    </div>
+
+                                    <div class="max-h-[320px] overflow-y-auto p-2">
+                                        {% for a in actions %}
+                                        <div @click="action = '{{ a.code }}'; actionName = '{{ a.name }}'; open = false; $dispatch('action-selected', '{{ a.code }}')"
+                                            class="flex items-center gap-4 p-3 hover:bg-orange-50 rounded-xl cursor-pointer transition-colors group">
+                                            <div
+                                                class="w-10 h-10 rounded-lg bg-orange-100 text-orange-600 flex items-center justify-center group-hover:bg-orange-200 group-hover:scale-110 transition-all duration-200">
+                                                <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24"
+                                                    stroke="currentColor">
+                                                    <path stroke-linecap="round" stroke-linejoin="round"
+                                                        stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
+                                                </svg>
+                                            </div>
+                                            <div>
+                                                <div class="font-bold text-slate-800">{{ a.name }}</div>
+                                                <div class="text-xs text-slate-500 mt-0.5">{{ a.description }}</div>
+                                            </div>
+                                        </div>
+                                        {% endfor %}
+                                    </div>
+                                </div>
+                            </div>
+                            <!-- End Action Pill -->
+
+                            <!-- Dynamic Action Config Area -->
+                            <div id="action-config-area" class="empty:hidden animate-fade-in flex items-center gap-2">
+                            </div>
+
+                        </div>
                     </div>
 
-                    <div class="border-t border-slate-100 pt-8 flex justify-center w-full">
-                        <button type="submit"
-                            class="px-8 py-3 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-full shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 transition-all flex items-center gap-2">
-                            <span>Create Automation</span>
-                            <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                    d="M14 5l7 7m0 0l-7 7m7-7H3" />
-                            </svg>
-                        </button>
-                    </div>
+                    <!-- Hidden Config Helper via HTMX -->
+                    <!-- When trigger selected, fetch config fields -->
+                    <div hx-get="{% url 'get_trigger_config_form' board.id %}" hx-trigger="trigger-selected from:body"
+                        hx-target="#trigger-config-area" hx-vals='js:{"trigger": event.detail}' class="hidden"></div>
+
+                    <div hx-get="{% url 'get_action_config_form' board.id %}" hx-trigger="action-selected from:body"
+                        hx-target="#action-config-area" hx-vals='js:{"action": event.detail}' class="hidden"></div>
+
                 </form>
             </div>
         </div>

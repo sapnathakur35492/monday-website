@@ -33,17 +33,19 @@
 
         <!-- Glass Card -->
         <div class="glass-panel p-8 rounded-2xl shadow-2xl relative">
-            <form class="space-y-6" action="." method="POST" novalidate x-data="{ 
+            <form class="space-y-6" action="{% url 'login' %}" method="POST" novalidate x-data="{ 
                       email: '{{ form.email.value|default:'' }}', 
                       password: '', 
                       emailTouched: false, 
                       passwordTouched: false,
+                      serverError: {% if error %}'{{ error|escapejs }}'{% else %}null{% endif %},
                       get isEmailValid() { return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(this.email) },
                       get isPasswordValid() { return this.password.length > 0 },
                       get isValid() { return this.isEmailValid && this.isPasswordValid },
                       submitForm(e) {
                           this.emailTouched = true;
                           this.passwordTouched = true;
+                          this.serverError = null;
                           if (!this.isValid) {
                               e.preventDefault();
                           }
@@ -51,16 +53,15 @@
                   }" @submit="submitForm">
                 {% csrf_token %}
 
-                {% if error %}
-                <div class="rounded-lg bg-red-500/10 border border-red-500/20 p-4 flex items-center gap-3">
-                    <svg class="h-5 w-5 text-red-400 flex-shrink-0" fill="none" viewBox="0 0 24 24"
+                <div x-show="serverError" x-transition
+                    class="rounded-lg bg-red-50 border border-red-300 p-4 flex items-center gap-3">
+                    <svg class="h-5 w-5 text-red-500 flex-shrink-0" fill="none" viewBox="0 0 24 24"
                         stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                             d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                     </svg>
-                    <p class="text-sm font-medium text-red-100">{{ error }}</p>
+                    <p class="text-sm font-semibold text-red-600" x-text="serverError"></p>
                 </div>
-                {% endif %}
 
                 <div>
                     <label for="email" class="block text-sm font-medium text-slate-700 mb-1 ml-1">Email address</label>

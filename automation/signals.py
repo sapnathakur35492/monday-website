@@ -11,6 +11,8 @@ def check_automation_triggers(sender, instance, **kwargs):
     Store the detected changes in the instance validation cache to use in post_save.
     """
     if not instance.pk:
+        # Mark as new item for item_created trigger
+        instance._is_new_item = True
         return 
     
     try:
@@ -20,19 +22,45 @@ def check_automation_triggers(sender, instance, **kwargs):
 
     # Store changes temporarily
     instance._status_changed = False
+    instance._priority_changed = False
+    instance._assigned_changed = False
+    instance._group_changed = False
     
     # Prevent infinite loops from automation updates
     if getattr(instance, '_is_automation_update', False):
         return
 
-    # Check if any "status" column changed
-    # We iterate over stored values.
-    # In a robust system we need to know WHICH column is a status column.
-    
-    # For now, let's assume if ANY value changed we check automations
+    # Check if any value changed
     if instance.values != old_instance.values:
         instance._values_changed = True
         instance._old_values = old_instance.values
+        
+        # Check for priority change
+        old_priority = old_instance.values.get('priority')
+        new_priority = instance.values.get('priority')
+        if old_priority != new_priority:
+            instance._priority_changed = True
+            instance._old_priority = old_priority
+            instance._new_priority = new_priority
+    
+    # Check if assigned_to changed (person column values)
+    # Find person columns and check if any changed
+    person_cols = instance.group.board.columns.filter(type='person')
+    for col in person_cols:
+        col_id_str = str(col.id)
+        old_assigned = old_instance.values.get(col_id_str)
+        new_assigned = instance.values.get(col_id_str)
+        if old_assigned != new_assigned:
+            instance._assigned_changed = True
+            instance._old_assigned = old_assigned
+            instance._new_assigned = new_assigned
+            break
+    
+    # Check if group changed
+    if instance.group_id != old_instance.group_id:
+        instance._group_changed = True
+        instance._old_group = old_instance.group
+        instance._new_group = instance.group
 
 @receiver(post_save, sender=Item)
 def execute_automation_actions(sender, instance, created, **kwargs):
@@ -40,19 +68,74 @@ def execute_automation_actions(sender, instance, created, **kwargs):
     Execute actions after save.
     """
     from .tasks import process_automation_action
+    from .models import TriggerType
     
     # 1. Trigger: Item Created
-    if created:
-        rules = AutomationRule.objects.filter(board=instance.group.board, trigger_type='item_created', is_active=True)
+    if created or getattr(instance, '_is_new_item', False):
+        # trigger_type is stored as string code in AutomationRule model
+        rules = AutomationRule.objects.filter(
+            board=instance.group.board, 
+            trigger_type='item_created', 
+            is_active=True
+        )
         for rule in rules:
             process_automation_action.delay(rule.id, instance.id, rule.action_config)
             
     # 2. Trigger: Status Change (or any value change)
     if hasattr(instance, '_values_changed') and instance._values_changed:
-        # Find 'status_change' rules for this board
-        rules = AutomationRule.objects.filter(board=instance.group.board, trigger_type='status_change', is_active=True)
+        # Fire status_change trigger using AutomationEngine
+        from automation.service import AutomationEngine
+        
+        # Detect which columns changed
+        old_vals = getattr(instance, '_old_values', {})
+        new_vals = instance.values
+        
+        # Find all status columns for this board
+        board_status_cols = {str(c.id): c for c in instance.group.board.columns.filter(type='status')}
+        
+        for col_id, new_val in new_vals.items():
+            # If this is a status column and it changed
+            if col_id in board_status_cols and new_val != old_vals.get(col_id):
+                context = {
+                    'item': instance,
+                    'column_id': col_id,
+                    'new_value': new_val
+                }
+                AutomationEngine.run_automations(instance.group.board, 'status_change', context)
+        
+        # Fire column_changed trigger
+        rules = AutomationRule.objects.filter(
+            board=instance.group.board, 
+            trigger_type='column_changed', 
+            is_active=True
+        )
         for rule in rules:
-            # Check condition (e.g. if status became 'Done')
-            # detailed matching logic usually goes here or inside the task for complexity
-            # For this MVP, we just fire the task and let it decide or simple match here
             process_automation_action.delay(rule.id, instance.id, rule.action_config)
+    
+    # 3. Trigger: Priority Changed
+    if hasattr(instance, '_priority_changed') and instance._priority_changed:
+        from automation.service import AutomationEngine
+        context = {
+            'item': instance,
+            'new_priority': getattr(instance, '_new_priority', None)
+        }
+        AutomationEngine.run_automations(instance.group.board, 'priority_changed', context)
+    
+    # 4. Trigger: Item Assigned
+    if hasattr(instance, '_assigned_changed') and instance._assigned_changed:
+        rules = AutomationRule.objects.filter(
+            board=instance.group.board, 
+            trigger_type='item_assigned', 
+            is_active=True
+        )
+        for rule in rules:
+            process_automation_action.delay(rule.id, instance.id, rule.action_config)
+    
+    # 5. Trigger: Item Moved to Group
+    if hasattr(instance, '_group_changed') and instance._group_changed:
+        from automation.service import AutomationEngine
+        context = {
+            'item': instance,
+            'new_group_id': instance.group.id if instance.group else None
+        }
+        AutomationEngine.run_automations(instance.group.board, 'item_moved', context)
