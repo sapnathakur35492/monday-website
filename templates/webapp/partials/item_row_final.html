@@ -748,13 +748,72 @@
         {% endwith %}
     </td>
     {% endfor %}
-    <td class="px-4 py-2 text-center bg-white/40 border-r border-transparent">
-        <button hx-post="{% url 'delete_item' item.group.board.id item.id %}" hx-confirm="Delete this item?"
-            hx-target="#item-{{ item.id }}" hx-swap="delete"
+    <td class="px-4 py-2 text-center bg-white/40 border-r border-transparent" x-data="{ showDeleteModal: false }">
+        <!-- Delete Button -->
+        <button @click="showDeleteModal = true"
             class="opacity-0 group-hover:opacity-100 transition-all text-slate-300 hover:text-red-500 hover:bg-red-50 p-1.5 rounded-lg">
             <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
             </svg>
         </button>
+
+        <!-- Beautiful Delete Confirmation Modal -->
+        <template x-teleport="body">
+            <div x-show="showDeleteModal" x-cloak class="fixed inset-0 z-[9999] flex items-center justify-center"
+                x-transition:enter="ease-out duration-300" x-transition:enter-start="opacity-0"
+                x-transition:enter-end="opacity-100" x-transition:leave="ease-in duration-200"
+                x-transition:leave-start="opacity-100" x-transition:leave-end="opacity-0">
+
+                <!-- Backdrop -->
+                <div @click="showDeleteModal = false" class="absolute inset-0 bg-slate-900/50 backdrop-blur-sm"></div>
+
+                <!-- Modal Content -->
+                <div x-show="showDeleteModal" x-transition:enter="ease-out duration-300"
+                    x-transition:enter-start="opacity-0 scale-90 translate-y-4"
+                    x-transition:enter-end="opacity-100 scale-100 translate-y-0"
+                    x-transition:leave="ease-in duration-200" x-transition:leave-start="opacity-100 scale-100"
+                    x-transition:leave-end="opacity-0 scale-95"
+                    class="relative bg-white rounded-2xl shadow-2xl p-6 w-[400px] max-w-[90vw] mx-4">
+
+                    <!-- Icon -->
+                    <div class="flex justify-center mb-4">
+                        <div class="w-16 h-16 rounded-full bg-red-100 flex items-center justify-center">
+                            <svg class="w-8 h-8 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                            </svg>
+                        </div>
+                    </div>
+
+                    <!-- Title & Description -->
+                    <div class="text-center mb-6">
+                        <h3 class="text-xl font-bold text-slate-800 mb-2">Delete Item?</h3>
+                        <p class="text-slate-500 text-sm">
+                            Are you sure you want to delete <span class="font-semibold text-slate-700">"{{
+                                item.name|truncatechars:30 }}"</span>?
+                            This action cannot be undone.
+                        </p>
+                    </div>
+
+                    <!-- Action Buttons -->
+                    <div class="flex gap-3">
+                        <button @click="showDeleteModal = false"
+                            class="flex-1 px-4 py-3 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-xl transition-colors">
+                            Cancel
+                        </button>
+                        <button @click="showDeleteModal = false"
+                            hx-post="{% url 'delete_item' item.group.board.id item.id %}"
+                            hx-target="#item-{{ item.id }}" hx-swap="delete"
+                            class="flex-1 px-4 py-3 bg-red-500 hover:bg-red-600 text-white font-bold rounded-xl shadow-lg shadow-red-200 transition-all flex items-center justify-center gap-2">
+                            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                            </svg>
+                            Delete
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </template>
     </td>
 </tr>

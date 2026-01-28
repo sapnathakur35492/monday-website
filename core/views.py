@@ -12,6 +12,20 @@ from .forms import SignUpForm  # Need to create this form
 
 from django.contrib.auth import authenticate, login, logout
 from .forms import SignUpForm, LoginForm
+import uuid
+from django.core.mail import send_mail
+from django.conf import settings
+
+def verify_email_view(request, token):
+    try:
+        user = User.objects.get(verification_token=token)
+        user.is_verified = True
+        user.verification_token = None
+        user.save()
+        login(request, user, backend='core.backends.EmailBackend')
+        return redirect('dashboard')
+    except User.DoesNotExist:
+        return render(request, 'core/login.html', {'error': 'Invalid or expired verification link.'})
 
 def signup_view(request):
     if request.user.is_authenticated:
@@ -46,8 +60,28 @@ def signup_view(request):
             Item.objects.create(group=group, name="Explore ProjectFlow", created_by=user)
             Item.objects.create(group=group, name="Invite team members", created_by=user)
             
-            login(request, user, backend='core.backends.EmailBackend')
-            return redirect('dashboard')
+            # Generate Verification Token
+            token = str(uuid.uuid4())
+            user.verification_token = token
+            user.is_verified = False
+            user.save()
+            
+            # Send Verification Email
+            verification_link = request.build_absolute_uri(f'/core/verify/{token}/')
+            try:
+                send_mail(
+                    'Verify your email for ProjectFlow',
+                    f'Click this link to verify your account: {verification_link}',
+                    'noreply@projectflow.com',
+                    [user.email],
+                    fail_silently=True,
+                    html_message=f'Click <a href="{verification_link}">here</a> to verify your account.'
+                )
+                print(f"Verification Link for {user.email}: {verification_link}") # For local testing
+            except Exception as e:
+                print(f"Error sending email: {e}")
+            
+            return render(request, 'core/verification_sent.html', {'email': user.email})
     else:
         form = SignUpForm()
     return render(request, 'core/signup.html', {'form': form})
@@ -245,14 +279,16 @@ def invite_member(request):
                 )
                 
                 if created:
-                    # 1. Send Email
+                        # 1. Send Email
+                    login_url = request.build_absolute_uri('/core/login/')
                     try:
                         send_mail(
                             subject=f"You've been invited to {org.name} on ProjectFlow",
-                            message=f"Hi {user_to_invite.username},\n\n{request.user.username} has invited you to join their team '{org.name}'.\n\nLog in to check it out!",
+                            message=f"Hi {user_to_invite.username},\n\n{request.user.username} has invited you to join their team '{org.name}'.\n\nLog in here: {login_url}",
                             from_email='system@projectflow.com',
                             recipient_list=[email],
-                            fail_silently=True
+                            fail_silently=True,
+                            html_message=f'Hi {user_to_invite.username},<br><br>{request.user.username} has invited you to join their team <strong>{org.name}</strong>.<br><br><a href="{login_url}" style="background-color:#6366f1;color:white;padding:10px 20px;text-decoration:none;border-radius:5px;">Accept Invitation</a>'
                         )
                     except:
                         pass # Fail silently for demo if no SMTP
@@ -273,12 +309,14 @@ def invite_member(request):
             # For MVP, we can't invite non-users easily without a signup flow token.
             # We'll simulate sending an invite email.
             try:
+                signup_url = request.build_absolute_uri('/core/signup/')
                 send_mail(
                     subject=f"You've been invited to ProjectFlow",
-                    message=f"Hi,\n\n{request.user.username} wants you to join ProjectFlow to collaborate on '{org.name}'.\n\nSign up here: https://amjim.com/core/signup/",
+                    message=f"Hi,\n\n{request.user.username} wants you to join ProjectFlow to collaborate on '{org.name}'.\n\nSign up here: {signup_url}",
                     from_email='system@projectflow.com',
                     recipient_list=[email],
-                    fail_silently=True
+                    fail_silently=True,
+                    html_message=f'Hi,<br><br>{request.user.username} wants you to join ProjectFlow to collaborate on <strong>{org.name}</strong>.<br><br><a href="{signup_url}" style="background-color:#6366f1;color:white;padding:10px 20px;text-decoration:none;border-radius:5px;">Sign Up Now</a>'
                 )
                 messages.success(request, f"Invitation email sent to {email}.")
             except:

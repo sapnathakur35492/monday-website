@@ -31,3 +31,20 @@ def make_list_comma(value):
     if not value:
         return []
     return [x.strip() for x in value.split(',')]
+
+@register.filter
+def clean_username(value):
+    """
+    Cleans a username by removing trailing numbers for professional display.
+    Usage: {{ user.username|clean_username }}
+    Examples: "Santosh3" -> "Santosh", "john_doe123" -> "john_doe"
+    """
+    if not value:
+        return ""
+    # Remove trailing digits
+    import re
+    cleaned = re.sub(r'\d+$', '', str(value))
+    # Replace underscores with spaces and title case
+    cleaned = cleaned.replace('_', ' ').title()
+    return cleaned if cleaned else value
+

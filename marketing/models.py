@@ -31,3 +31,19 @@ class Page(models.Model):
         return self.title
 
 
+
+class ComparisonItem(models.Model):
+    """
+    Rows for the 'Why Choose ProjectFlow' comparison table.
+    """
+    feature_name = models.CharField(max_length=100)
+    projectflow_text = models.CharField(max_length=100, help_text="Text for our column (e.g., '✅ Included')")
+    monday_text = models.CharField(max_length=100, help_text="Text for Monday.com column (e.g., '❌ Complex')")
+    order = models.IntegerField(default=0)
+    is_active = models.BooleanField(default=True)
+
+    class Meta:
+        ordering = ['order']
+
+    def __str__(self):
+        return self.feature_name

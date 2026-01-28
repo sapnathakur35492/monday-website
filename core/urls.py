@@ -4,6 +4,7 @@ from . import views
 urlpatterns = [
     path('saas-admin/', views.admin_dashboard, name='saas_admin_dashboard'),
     path('signup/', views.signup_view, name='signup'),
+    path('verify/<str:token>/', views.verify_email_view, name='verify_email'),
     path('login/', views.login_view, name='login'),
     path('logout/', views.logout_view, name='logout'),
     path('billing/', views.billing_dashboard, name='billing'),

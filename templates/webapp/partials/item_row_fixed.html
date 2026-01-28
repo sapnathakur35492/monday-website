@@ -324,7 +324,7 @@
         {% elif col.type == 'checkbox' %}
         <div class="h-full px-2 flex items-center justify-center">
             <!-- Checkbox fix applied -->
-            <input type="checkbox" {% if val=='true' or val==True %}checked{% endif %}
+            <input type="checkbox" {% if val == 'true' or val == True %}checked{% endif %}
                 class="w-5 h-5 rounded border-slate-300 text-green-500 focus:ring-green-500 cursor-pointer"
                 onchange="this.value = this.checked ? 'true' : 'false'; htmx.trigger(this, 'actualChange')"
                 hx-post="{% url 'update_status' item.id col.id %}" hx-trigger="actualChange"

@@ -25,8 +25,17 @@ def pricing(request):
     Pricing page.
     """
     # Fetch all plans with features
+    # Fetch all plans with features
     plans = PricingPlan.objects.prefetch_related('features').all().order_by('price')
-    return render(request, 'marketing/pricing.html', {'plans': plans})
+    
+    # Fetch comparison items (Dynamic "Why Choose Us")
+    from .models import ComparisonItem
+    comparison_items = ComparisonItem.objects.filter(is_active=True).order_by('order')
+    
+    return render(request, 'marketing/pricing.html', {
+        'plans': plans, 
+        'comparison_items': comparison_items
+    })
 
 def about(request):
     return render(request, 'marketing/about.html')

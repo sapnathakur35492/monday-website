@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import Page, Feature
+from .models import Page, Feature, ComparisonItem
 
 @admin.register(Feature)
 class FeatureAdmin(admin.ModelAdmin):
@@ -13,3 +13,8 @@ class PageAdmin(admin.ModelAdmin):
     prepopulated_fields = {'slug': ('title',)}
 
 
+
+@admin.register(ComparisonItem)
+class ComparisonItemAdmin(admin.ModelAdmin):
+    list_display = ('feature_name', 'projectflow_text', 'monday_text', 'order', 'is_active')
+    list_editable = ('order', 'is_active')

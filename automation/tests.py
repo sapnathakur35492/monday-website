@@ -29,7 +29,7 @@ class AutomationLogicTest(TestCase):
             name='Test Rule',
             is_active=True,
             trigger_type='status_change',
-            trigger_config={'column_id': self.status_col.id, 'value_id': 'Done'},
+            trigger_config={'column_id': self.status_col.id, 'value': 'Done'},
             action_type='create_update',
             action_config={'message': 'Task completed!'}
         )
@@ -57,7 +57,7 @@ class AutomationLogicTest(TestCase):
             board=self.board,
             name='Test Rule Mismatch',
             trigger_type='status_change',
-            trigger_config={'column_id': self.status_col.id, 'value_id': 'Done'},
+            trigger_config={'column_id': self.status_col.id, 'value': 'Done'},
             action_type='create_update',
             action_config={'message': 'Should not happen'}
         )

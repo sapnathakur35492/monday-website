@@ -38,9 +38,32 @@ def get_trigger_config_form(request, board_id):
     if not handler or not handler.config_schema:
         return HttpResponse("")
         
+    # Parse recipe template
+    recipe_template = getattr(handler, 'recipe_template', '')
+    tokens = []
+    if recipe_template:
+        import re
+        # Split by {field_name}
+        parts = re.split(r'(\{.*?\})', recipe_template)
+        for part in parts:
+            if part.startswith('{') and part.endswith('}'):
+                field_name = part[1:-1]
+                # Find field def
+                field_def = next((f for f in handler.config_schema if f['name'] == field_name), None)
+                if field_def:
+                    tokens.append({'type': 'field', 'field': field_def})
+                else:
+                    tokens.append({'type': 'text', 'content': part}) # Fallback
+            else:
+                if part: tokens.append({'type': 'text', 'content': part})
+    else:
+        # Fallback if no template: just list fields
+        for field in handler.config_schema:
+             tokens.append({'type': 'field', 'field': field})
+
     return render(request, 'automation/partials/config_form.html', {
         'board': board,
-        'schema': handler.config_schema,
+        'tokens': tokens,
         'prefix': 'trigger_'
     })
 
@@ -56,10 +79,30 @@ def get_action_config_form(request, board_id):
     
     if not handler or not handler.config_schema:
         return HttpResponse("")
+
+    # Parse recipe template (Duplicate logic, could extract)
+    recipe_template = getattr(handler, 'recipe_template', '')
+    tokens = []
+    if recipe_template:
+        import re
+        parts = re.split(r'(\{.*?\})', recipe_template)
+        for part in parts:
+            if part.startswith('{') and part.endswith('}'):
+                field_name = part[1:-1]
+                field_def = next((f for f in handler.config_schema if f['name'] == field_name), None)
+                if field_def:
+                    tokens.append({'type': 'field', 'field': field_def})
+                else:
+                    tokens.append({'type': 'text', 'content': part})
+            else:
+                if part: tokens.append({'type': 'text', 'content': part})
+    else:
+        for field in handler.config_schema:
+             tokens.append({'type': 'field', 'field': field})
         
     return render(request, 'automation/partials/config_form.html', {
         'board': board,
-        'schema': handler.config_schema,
+        'tokens': tokens,
         'prefix': 'action_'
     })
 
@@ -148,71 +191,77 @@ def delete_rule(request, board_id, rule_id):
 
 @login_required
 def edit_rule(request, board_id, rule_id):
-    # For MVP, we'll just delete and recreate or show the builder pre-filled.
-    # To keep it simple and robust, we will redirect to builder but passing initial values context would be complex without a proper React form.
-    # We will just treat 'Edit' as deleting and creating new for now, or 
-    # better: Redirect to builder, but we need to pass the existing config.
-    # Let's just implement Delete for now as prioritized, and for Edit we can redirect to a "Not Implemented" or reuse create.
-    # Actually, the user demanded "Edit". Let's try to support it.
-    
+    """
+    Edits an existing automation rule.
+    """
     board = get_object_or_404(Board, id=board_id)
     rule = get_object_or_404(AutomationRule, id=rule_id, board=board)
     
-    # We will reuse the builder template but populate it
-    triggers = TriggerType.objects.filter(is_active=True)
-    actions = ActionType.objects.filter(is_active=True)
+    # Load registry
+    from .registry import AutomationRegistry
+    triggers = AutomationRegistry.get_all_triggers()
+    actions = AutomationRegistry.get_all_actions()
     
     status_col = board.columns.filter(type='status').first()
     status_options = status_col.settings.get('choices', []) if status_col else ['Not Started', 'Done']
 
     if request.method == 'POST':
-        # Same update logic (simplified: update the fields)
         trigger_code = request.POST.get('trigger')
         action_code = request.POST.get('action')
         
-        # ... (Duplicate logic from create_rule, should refactor) ...
-        # For speed, I'll basically recreate the rule object
-        
-        trigger_config = {}
-        if trigger_code == 'status_change':
-             trigger_config['value'] = request.POST.get('trigger_value')
-             
-        action_config = {}
-        if action_code == 'change_status':
-             val = request.POST.get('action_value')
-             if status_col: action_config = {'column_id': status_col.id, 'new_value': val}
-        elif action_code == 'send_email':
-             action_config = {'recipient': 'owner'}
+        # Determine Handlers
+        trigger_handler = AutomationRegistry.get_trigger(trigger_code)
+        action_handler = AutomationRegistry.get_action(action_code)
 
-        # Update params
+        # Build Configs dynamically
+        trigger_config = {}
+        if trigger_handler and trigger_handler.config_schema:
+            for field in trigger_handler.config_schema:
+                key = field['name']
+                val = request.POST.get(f"trigger_{key}")
+                if val: trigger_config[key] = val
+                
+        action_config = {}
+        if action_handler and action_handler.config_schema:
+            for field in action_handler.config_schema:
+                key = field['name']
+                val = request.POST.get(f"action_{key}")
+                if val: action_config[key] = val
+
+        # Generate Name
+        t_name = trigger_handler.name if trigger_handler else trigger_code
+        a_name = action_handler.name if action_handler else action_code
+        
+        rule_name = f"When {t_name}"
+        # Heuristic for "value" in name
+        if trigger_config.get('value'): 
+            rule_name += f" is {trigger_config['value']}"
+        rule_name += f", then {a_name}"
+        if action_config.get('new_value'):
+            rule_name += f" to {action_config['new_value']}"
+        
+        # Save updates
         rule.trigger_type = trigger_code
         rule.action_type = action_code
         rule.trigger_config = trigger_config
         rule.action_config = action_config
-        
-        # Regen name
-        trigger_obj = TriggerType.objects.filter(code=trigger_code).first()
-        action_obj = ActionType.objects.filter(code=action_code).first()
-        t_name = trigger_obj.name if trigger_obj else trigger_code
-        a_name = action_obj.name if action_obj else action_code
-        
-        rule_name = f"When {t_name}"
-        if trigger_config.get('value'): rule_name += f" ({trigger_config['value']})"
-        rule_name += f" → {a_name}"
-        if action_config.get('new_value'): rule_name += f" ({action_config['new_value']})"
-        
         rule.name = rule_name
         rule.save()
         
         return redirect('automation_list', board_id=board.id)
 
-    # Context for filling inputs
+    # Initial Data for pre-filling the form
+    # We flatten the config into a single dict for the template to access easily
     initial_data = {
         'trigger': rule.trigger_type,
         'action': rule.action_type,
-        'trigger_value': rule.trigger_config.get('value'),
-        'action_value': rule.action_config.get('new_value')
     }
+    # Prefix trigger config keys
+    for k, v in rule.trigger_config.items():
+        initial_data[f"trigger_{k}"] = v
+    # Prefix action config keys
+    for k, v in rule.action_config.items():
+        initial_data[f"action_{k}"] = v
 
     return render(request, 'automation/builder.html', {
         'board': board,
@@ -223,3 +272,38 @@ def edit_rule(request, board_id, rule_id):
         'is_edit': True,
         'rule_id': rule.id
     })
+
+@require_POST
+@login_required
+def toggle_rule(request, board_id, rule_id):
+    """
+    Toggle an automation rule's active state via HTMX.
+    """
+    board = get_object_or_404(Board, id=board_id)
+    rule = get_object_or_404(AutomationRule, id=rule_id, board=board)
+    
+    # Toggle the is_active state
+    rule.is_active = not rule.is_active
+    rule.save()
+    
+    # Return the updated toggle HTML
+    return render(request, 'automation/partials/toggle_switch.html', {
+        'rule': rule,
+        'board': board
+    })
+
+@login_required
+def run_history(request, board_id):
+    """
+    Show automation run history for a board.
+    """
+    from .models import AutomationLog
+    
+    board = get_object_or_404(Board, id=board_id)
+    logs = AutomationLog.objects.filter(rule__board=board).select_related('rule').order_by('-executed_at')[:50]
+    
+    return render(request, 'automation/run_history.html', {
+        'board': board,
+        'logs': logs
+    })
+

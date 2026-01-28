@@ -1,6 +1,6 @@
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin
-from .models import User, Organization, Membership, Notification
+from .models import User, Organization, Membership, Notification, FooterLink
 from .saas_models import PricingPlan, BillingProfile, RolePermission
 
 @admin.register(User)
@@ -42,3 +42,10 @@ class RolePermissionAdmin(admin.ModelAdmin):
     list_editable = ('can_create_board', 'can_create_automation')
 
 admin.site.register(Notification)
+
+@admin.register(FooterLink)
+class FooterLinkAdmin(admin.ModelAdmin):
+    list_display = ('title', 'url', 'section', 'order', 'is_active')
+    list_filter = ('section', 'is_active')
+    search_fields = ('title', 'url')
+    ordering = ('section', 'order')

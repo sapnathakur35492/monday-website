@@ -12,6 +12,10 @@ class BaseHandler:
     # Define what configuration fields this handler needs
     # e.g. [{'name': 'column_id', 'type': 'column', 'label': 'Status Column'}]
     config_schema = []
+    
+    # Sentence fragment for UI construction
+    # e.g. "When status changes" or "Move item to..."
+    recipe_template = ""
 
     def validate_config(self, config):
         """Validate if the provided config matches the schema"""
@@ -78,6 +82,7 @@ class StatusChangeTrigger(TriggerHandler):
     code = 'status_change'
     name = 'Status Changes'
     description = 'When a status column changes to a specific value'
+    recipe_template = "When {column_id} changes to {value}"
     config_schema = [
         {'name': 'column_id', 'type': 'column', 'param': 'status', 'label': 'Column'},
         {'name': 'value', 'type': 'value', 'label': 'Value'}
@@ -110,6 +115,7 @@ class ItemCreatedTrigger(TriggerHandler):
     code = 'item_created'
     name = 'Item Created'
     description = 'When a new item is created'
+    recipe_template = "When an item is created"
     
     def check_condition(self, rule, context):
         return True
@@ -119,14 +125,88 @@ class ColumnChangeTrigger(TriggerHandler):
     code = 'column_changed'
     name = 'Any Column Changes'
     description = 'When any column value is updated'
+    recipe_template = "When any column changes"
 
     def check_condition(self, rule, context):
         return True
+
+
+@AutomationRegistry.register_trigger
+class PriorityChangeTrigger(TriggerHandler):
+    """
+    Fires when an item's priority value changes.
+    """
+    code = 'priority_changed'
+    name = 'Priority Changes'
+    description = 'When an item’s priority changes to a specific value'
+    recipe_template = "When priority changes to {new_priority}"
+    config_schema = [
+        {'name': 'new_priority', 'type': 'value', 'label': 'Priority value'},
+    ]
+
+    def check_condition(self, rule, context):
+        config = rule.trigger_config or {}
+        expected = config.get('new_priority')
+        current = context.get('new_priority')
+
+        # If no specific priority configured, fire for any change
+        if not expected:
+            return True
+        return str(expected) == str(current)
+
+
+@AutomationRegistry.register_trigger
+class ItemAssignedTrigger(TriggerHandler):
+    """
+    Fires when an item is assigned to a specific person.
+    """
+    code = 'item_assigned'
+    name = 'Item Assigned'
+    description = 'When an item is assigned to a specific person'
+    recipe_template = "When item is assigned to {user_id}"
+    config_schema = [
+        {'name': 'user_id', 'type': 'user', 'label': 'Person'},
+    ]
+
+    def check_condition(self, rule, context):
+        config = rule.trigger_config or {}
+        target_user_id = str(config.get('user_id') or "")
+        new_user_id = str(context.get('new_assigned_user_id') or "")
+
+        # If no specific user configured, fire for any assignment change
+        if not target_user_id:
+            return bool(new_user_id)
+        return target_user_id == new_user_id
+
+
+@AutomationRegistry.register_trigger
+class ItemMovedTrigger(TriggerHandler):
+    """
+    Fires when an item moves into a specific group.
+    """
+    code = 'item_moved'
+    name = 'Item moved to group'
+    description = 'When an item is moved to a specific group'
+    recipe_template = "When item moves to {group_id}"
+    config_schema = [
+        {'name': 'group_id', 'type': 'group', 'label': 'Group'},
+    ]
+
+    def check_condition(self, rule, context):
+        config = rule.trigger_config or {}
+        target_group_id = str(config.get('group_id') or "")
+        new_group_id = str(context.get('new_group_id') or "")
+
+        # If no specific group configured, fire for any move
+        if not target_group_id:
+            return bool(new_group_id)
+        return target_group_id == new_group_id
 
 @AutomationRegistry.register_action
 class MoveItemAction(ActionHandler):
     code = 'move_item'
     name = 'Move Item to Group'
+    recipe_template = "move item to {group_id}"
     config_schema = [
         {'name': 'group_id', 'type': 'group', 'label': 'Group'}
     ]
@@ -151,6 +231,7 @@ class MoveItemAction(ActionHandler):
 class ChangeStatusAction(ActionHandler):
     code = 'change_status'
     name = 'Change Status'
+    recipe_template = "change status of {column_id} to {new_value}"
     config_schema = [
         {'name': 'column_id', 'type': 'column', 'param': 'status', 'label': 'Column'},
         {'name': 'new_value', 'type': 'value', 'label': 'Status'}
@@ -174,6 +255,7 @@ class ChangeStatusAction(ActionHandler):
 class CreateUpdateAction(ActionHandler):
     code = 'create_update'
     name = 'Create an Update'
+    recipe_template = "create an update: {message}"
     config_schema = [
         {'name': 'message', 'type': 'text', 'label': 'Message'}
     ]
@@ -201,6 +283,7 @@ class CreateUpdateAction(ActionHandler):
 class NotifyAction(ActionHandler):
     code = 'send_notification'
     name = 'Notify User'
+    recipe_template = "notify {user_id}"
     config_schema = [
         {'name': 'user_id', 'type': 'user', 'label': 'User'}
     ]
@@ -217,6 +300,7 @@ class NotifyAction(ActionHandler):
 class AssignPersonAction(ActionHandler):
     code = 'assign_person'
     name = 'Assign Person'
+    recipe_template = "assign {user_id}"
     config_schema = [
         {'name': 'user_id', 'type': 'user', 'label': 'Person'}
     ]

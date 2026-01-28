@@ -36,9 +36,12 @@ def dashboard(request):
 def board_detail(request, board_id):
     """
     Renders the board detail view with its groups and items.
+    Returns a proper 404 page when the board does not exist instead of a raw error.
     """
+    from django.shortcuts import get_object_or_404
+
     # Optimized query with select_related and prefetch_related
-    board = Board.objects.select_related(
+    base_qs = Board.objects.select_related(
         'workspace',
         'workspace__organization',
         'created_by'
@@ -47,25 +50,84 @@ def board_detail(request, board_id):
         'groups__items',
         'groups__items__created_by',
         'columns'
-    ).get(id=board_id)
+    )
+
+    board = get_object_or_404(base_qs, id=board_id)
     
     # Permission Check
     if not check_board_access(request.user, board):
         from django.core.exceptions import PermissionDenied
         raise PermissionDenied("You do not have access to this board's workspace.")
     
-    # Simple Search logic
+    # Filter Logic
     search_query = request.GET.get('search', '').strip()
+    filter_person = request.GET.get('person', '').strip()
     
-    context = {'board': board, 'search_query': search_query}
+    context = {'board': board, 'search_query': search_query, 'filter_person': filter_person}
     
-    if search_query:
-        # Filter items if search exists. 
-        from django.db.models import Prefetch
-        items_queryset = Item.objects.filter(name__icontains=search_query).select_related('created_by')
+    # Generic Filtering (Phase 2)
+    # Allows filtering by any column: ?f_colId=Value or ?f_status=Done
+    filter_kwargs = {}
+    for key, val in request.GET.items():
+        if key.startswith('f_'):
+            col_key = key[2:] # separate 'f_'
+            # If it maps to a known column type name (status), we might need to find the column ID
+            # For now, let's assume f_{col_id} is used, or f_status (if generic).
+            # To catch 'f_status', we find the status column.
+            if col_key == 'status':
+                col = board.columns.filter(type='status').first()
+                if col: filter_kwargs[str(col.id)] = val
+            elif col_key == 'person':
+                col = board.columns.filter(type='person').first()
+                if col: filter_kwargs[str(col.id)] = val
+            elif col_key == 'priority':
+                 col = board.columns.filter(type='priority').first()
+                 if col: filter_kwargs[str(col.id)] = val
+            else:
+                 # Assume direct ID
+                 filter_kwargs[col_key] = val
+
+    if search_query or filter_person or filter_kwargs:
+        # Filter items if search or person filter exists.
+        from django.db.models import Prefetch, Q
+        
+        # Base query for name search only (SQLite compatible)
+        items_filter = Q()
+        if search_query:
+            items_filter &= Q(name__icontains=search_query)
+            
+        # Get all items first, then filter in Python for JSON fields
+        items_queryset = Item.objects.filter(items_filter).select_related('created_by')
+        
+        # If we have JSON field filters (person or column values), filter in Python
+        if filter_person or filter_kwargs:
+            filtered_item_ids = []
+            for item in items_queryset.filter(group__board_id=board_id):
+                include = True
+                
+                # Check person filter
+                if filter_person and include:
+                    # Check if any value contains the person name
+                    values_str = str(item.values)
+                    if filter_person.lower() not in values_str.lower():
+                        include = False
+                
+                # Check column value filters
+                if filter_kwargs and include:
+                    for col_id, expected_val in filter_kwargs.items():
+                        actual_val = item.values.get(col_id, '')
+                        if str(actual_val) != str(expected_val):
+                            include = False
+                            break
+                
+                if include:
+                    filtered_item_ids.append(item.id)
+            
+            # Now filter the queryset to only matching IDs
+            items_queryset = Item.objects.filter(id__in=filtered_item_ids).select_related('created_by')
         
         # We need to ensure we only get groups for this board, and within those groups, only matching items
-        board = Board.objects.select_related(
+        filtered_qs = Board.objects.select_related(
             'workspace',
             'workspace__organization'
         ).prefetch_related(
@@ -73,7 +135,8 @@ def board_detail(request, board_id):
                 Prefetch('items', queryset=items_queryset)
             )),
             'columns'
-        ).get(id=board_id)
+        )
+        board = get_object_or_404(filtered_qs, id=board_id)
         context['board'] = board
 
     context['columns'] = board.columns.all()
@@ -147,7 +210,7 @@ def add_item(request, group_id):
     columns = group.board.columns.all().order_by('position')
     users = group.board.workspace.organization.memberships.select_related('user').all()
     
-    return render(request, 'webapp/partials/item_row.html', {'item': item, 'columns': columns, 'users': users})
+    return render(request, 'webapp/partials/item_row_final.html', {'item': item, 'columns': columns, 'users': users})
 
 def verify_edit_permission(user, board):
     """
@@ -182,9 +245,17 @@ def update_status(request, item_id, col_id):
     if not verify_edit_permission(request.user, item.group.board):
         return JsonResponse({'error': 'Permission Denied'}, status=403)
         
-    column = get_object_or_404(Column, id=col_id)
-    
-    # ... logic continues ...
+    # Handle Special Fields (Name)
+    if col_id == 0 or str(col_id) == "0":
+        field = request.POST.get('field')
+        if field == 'name':
+             item.name = requested_val
+             item.save()
+             # Return immediately
+             columns = item.group.board.columns.all()
+             users = item.group.board.workspace.organization.memberships.select_related('user').all()
+             return render(request, 'webapp/partials/item_row_final.html', {'item': item, 'columns': columns, 'users': users})
+
     column = get_object_or_404(Column, id=col_id)
     
     # Get dynamic status options from column
@@ -238,11 +309,22 @@ def update_status(request, item_id, col_id):
     users = item.group.board.workspace.organization.memberships.select_related('user').all()
     return render(request, 'webapp/partials/item_row.html', {'item': item, 'columns': columns, 'users': users})
 
+@login_required
 def kanban_view(request, board_id):
     """
     Renders the Kanban board view. Now 100% DYNAMIC!
     """
-    board = Board.objects.select_related('workspace').prefetch_related('columns').get(id=board_id)
+    from django.shortcuts import get_object_or_404
+    from django.core.exceptions import PermissionDenied
+
+    board = get_object_or_404(
+        Board.objects.select_related('workspace').prefetch_related('columns'),
+        id=board_id
+    )
+    
+    # Permission Check
+    if not check_board_access(request.user, board):
+        raise PermissionDenied("You do not have access to this board's workspace.")
     
     # 1. Identify the 'Status' column to group by
     status_column = board.columns.filter(type='status').first()
@@ -327,18 +409,40 @@ def update_item_order(request):
 
 @login_required
 def gantt_view(request, board_id):
-    board = get_object_or_404(Board, id=board_id)
+    from django.core.exceptions import PermissionDenied
+    
+    board = get_object_or_404(
+        Board.objects.select_related('workspace', 'workspace__organization'),
+        id=board_id
+    )
+    
+    # Permission Check
+    if not check_board_access(request.user, board):
+        raise PermissionDenied("You do not have access to this board's workspace.")
+    
     return render(request, 'webapp/board_gantt.html', {
         'board': board,
         'workspace': board.workspace
     })
 
+@login_required
 def calendar_view(request, board_id):
     """
     Renders items on a calendar.
     Requires at least one 'date' column.
     """
-    board = Board.objects.select_related('workspace').prefetch_related('columns').get(id=board_id)
+    from django.shortcuts import get_object_or_404
+    from django.core.exceptions import PermissionDenied
+
+    board = get_object_or_404(
+        Board.objects.select_related('workspace').prefetch_related('columns'),
+        id=board_id
+    )
+    
+    # Permission Check
+    if not check_board_access(request.user, board):
+        raise PermissionDenied("You do not have access to this board's workspace.")
+    
     import json
     
     # 1. Find Date Column
@@ -373,48 +477,93 @@ def calendar_view(request, board_id):
 @login_required
 def my_work_view(request):
     """
-    Shows all items created by or assigned to the current user.
-    This is different from dashboard which shows all workspaces.
+    Shows all items assigned to the current user, grouped by timeline.
+    Mimics Monday.com's "My Work".
     """
-    # Get items created by user
-    # 1. Created by User
-    created_items = Item.objects.filter(created_by=request.user).select_related('group__board__workspace')
+    from datetime import date, timedelta
     
-    # 2. Assigned to User
-    from django.db.models import Q
+    # 1. Fetch relevant items (Assigned to user OR Created by user)
+    # Note: For strict "My Work", usually it's just assigned items, but we'll include created for now if no assignee logic exists fully yet.
+    # To make it robust, we'll focus on items where 'Assigned To' column == user.username
     
-    # Find all "person" columns
     person_cols = Column.objects.filter(type='person')
+    candidate_items = Item.objects.filter(
+        group__board__columns__in=person_cols
+    ).select_related('group', 'group__board').distinct()
     
-    # Build query: For each column, check if its ID is in values with the username
-    # JSONField filtering: values__<col_id> = username. 
-    # Since keys are strings of IDs, we can construct filters.
-    
-    assigned_items = []
-    # Fetch all items that rely on person columns to limit DB hits slightly
-    # Ideally, we would filter by board/person cols first, but for MVP:
-    # Get all items connected to board columns of type 'person'
-    candidate_items = Item.objects.filter(group__board__columns__in=person_cols).distinct()
-    
+    my_items = []
     username = request.user.username
     
     for item in candidate_items:
-        # Check values manually
-        # values is a dict {col_id: username}
+        # Check if user is assigned
+        is_assigned = False
         for col in person_cols:
-            col_id_str = str(col.id)
-            if item.values.get(col_id_str) == username:
-                assigned_items.append(item)
-                break # Sent for this item
-
+            if item.group.board_id == col.board_id: # Optimization check
+                val = item.values.get(str(col.id))
+                if val == username:
+                    is_assigned = True
+                    break
         
-    # Merge and Deduplicate
-    all_items = list(created_items) + assigned_items
-    # Sort by created_at desc
-    all_items.sort(key=lambda x: x.created_at, reverse=True)
-     
+        if is_assigned:
+            my_items.append(item)
+            
+    # Also include items created by user if they generally don't use 'Assign' col? 
+    # Let's stick to "Assigned" for "My Work" paradigm, but add created as fallback if empty?
+    # No, clean behavior: My Work = Assigned to me.
+    
+    # Timeline Logic
+    today = date.today()
+    buckets = {
+        'Overdue': [],
+        'Today': [],
+        'This_Week': [],
+        'Later': [],
+        'No_Date': []
+    }
+    
+    for item in my_items:
+        # Check Status first - if Done, maybe hide or put in "Done" bucket?
+        # monday.com usually hides "Done" from standard view or puts at bottom.
+        # Let's check status.
+        status_col = item.group.board.columns.filter(type='status').first()
+        status_val = item.values.get(str(status_col.id)) if status_col else None
+        
+        if status_val == 'Done':
+            continue # specific Requirement: "Work to do"
+            
+        # Find Date Column
+        date_col = item.group.board.columns.filter(type='date').first()
+        if not date_col:
+            buckets['No_Date'].append(item)
+            continue
+            
+        date_str = item.values.get(str(date_col.id))
+        if not date_str:
+            buckets['No_Date'].append(item)
+            continue
+            
+        # Parse Date
+        try:
+            from datetime import datetime
+            item_date = datetime.strptime(date_str, '%Y-%m-%d').date()
+            
+            if item_date < today:
+                buckets['Overdue'].append(item)
+            elif item_date == today:
+                buckets['Today'].append(item)
+            elif item_date <= today + timedelta(days=7):
+                buckets['This_Week'].append(item)
+            else:
+                buckets['Later'].append(item)
+        except ValueError:
+            buckets['No_Date'].append(item)
+
+    # Check if empty
+    is_empty = all(len(items) == 0 for items in buckets.values())
+
     return render(request, 'webapp/my_work.html', {
-        'items': all_items[:50] # Limit to recent 50
+        'buckets': buckets,
+        'is_empty': is_empty
     })
 
 @login_required

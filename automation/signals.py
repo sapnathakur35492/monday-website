@@ -1,8 +1,6 @@
 from django.db.models.signals import pre_save, post_save
 from django.dispatch import receiver
 from webapp.models import Item
-from .models import AutomationRule, AutomationLog
-import json
 
 @receiver(pre_save, sender=Item)
 def check_automation_triggers(sender, instance, **kwargs):
@@ -67,25 +65,18 @@ def execute_automation_actions(sender, instance, created, **kwargs):
     """
     Execute actions after save.
     """
-    from .tasks import process_automation_action
-    from .models import TriggerType
+    from automation.service import AutomationEngine
     
     # 1. Trigger: Item Created
     if created or getattr(instance, '_is_new_item', False):
-        # trigger_type is stored as string code in AutomationRule model
-        rules = AutomationRule.objects.filter(
-            board=instance.group.board, 
-            trigger_type='item_created', 
-            is_active=True
+        AutomationEngine.run_automations(
+            instance.group.board,
+            'item_created',
+            {'item': instance}
         )
-        for rule in rules:
-            process_automation_action.delay(rule.id, instance.id, rule.action_config)
             
     # 2. Trigger: Status Change (or any value change)
     if hasattr(instance, '_values_changed') and instance._values_changed:
-        # Fire status_change trigger using AutomationEngine
-        from automation.service import AutomationEngine
-        
         # Detect which columns changed
         old_vals = getattr(instance, '_old_values', {})
         new_vals = instance.values
@@ -102,19 +93,20 @@ def execute_automation_actions(sender, instance, created, **kwargs):
                     'new_value': new_val
                 }
                 AutomationEngine.run_automations(instance.group.board, 'status_change', context)
-        
-        # Fire column_changed trigger
-        rules = AutomationRule.objects.filter(
-            board=instance.group.board, 
-            trigger_type='column_changed', 
-            is_active=True
+
+        # Fire generic "any column changed" trigger
+        AutomationEngine.run_automations(
+            instance.group.board,
+            'column_changed',
+            {
+                'item': instance,
+                'old_values': old_vals,
+                'new_values': new_vals,
+            }
         )
-        for rule in rules:
-            process_automation_action.delay(rule.id, instance.id, rule.action_config)
     
     # 3. Trigger: Priority Changed
     if hasattr(instance, '_priority_changed') and instance._priority_changed:
-        from automation.service import AutomationEngine
         context = {
             'item': instance,
             'new_priority': getattr(instance, '_new_priority', None)
@@ -123,17 +115,23 @@ def execute_automation_actions(sender, instance, created, **kwargs):
     
     # 4. Trigger: Item Assigned
     if hasattr(instance, '_assigned_changed') and instance._assigned_changed:
-        rules = AutomationRule.objects.filter(
-            board=instance.group.board, 
-            trigger_type='item_assigned', 
-            is_active=True
-        )
-        for rule in rules:
-            process_automation_action.delay(rule.id, instance.id, rule.action_config)
+        from core.models import User
+        new_username = getattr(instance, '_new_assigned', None)
+        new_user_id = None
+        if new_username:
+            user = User.objects.filter(username=new_username).first()
+            if user:
+                new_user_id = user.id
+
+        context = {
+            'item': instance,
+            'new_assigned_username': new_username,
+            'new_assigned_user_id': new_user_id,
+        }
+        AutomationEngine.run_automations(instance.group.board, 'item_assigned', context)
     
     # 5. Trigger: Item Moved to Group
     if hasattr(instance, '_group_changed') and instance._group_changed:
-        from automation.service import AutomationEngine
         context = {
             'item': instance,
             'new_group_id': instance.group.id if instance.group else None

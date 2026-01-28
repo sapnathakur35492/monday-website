@@ -1,5 +1,6 @@
 {% extends "webapp/base_app.html" %}
 {% load static %}
+{% load webapp_tags %}
 
 {% block app_content %}
 <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -10,9 +11,14 @@
         <div class="relative z-10">
             <h1 class="text-4xl font-extrabold tracking-tight mb-2">
                 Welcome back,
-                {{ request.user.first_name|default:request.user.username|title }}!
+                {% if request.user.first_name %}
+                {{ request.user.get_full_name }}!
+                {% else %}
+                {{ request.user.username|clean_username }}!
+                {% endif %}
                 <span class="animate-wave inline-block origin-bottom-right">👋</span>
             </h1>
+
             <p class="text-indigo-100 text-lg font-medium italic opacity-90">
                 {{ quote|default:"Plan your work. Track your progress. Move projects forward." }}
             </p>

@@ -1,124 +1,335 @@
-<div class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 backdrop-blur-sm p-4 animate-fade-in">
-    <div class="flex h-[80vh] w-[90vw] max-w-6xl bg-white rounded-xl shadow-2xl overflow-hidden animate-scale-in">
-        <!-- Sidebar -->
-        <div class="w-64 bg-slate-50 border-r border-slate-200 flex flex-col p-4">
-            <h2 class="text-xl font-bold text-slate-800 mb-6 px-2">Automation Center</h2>
+{% load static %}
 
-            <nav class="space-y-1">
-                <button
-                    class="w-full text-left px-3 py-2 rounded-lg bg-indigo-50 text-indigo-700 font-semibold flex justify-between items-center group transition-colors">
-                    <span>Board automations</span>
-                    <span class="bg-indigo-200 text-indigo-800 text-xs px-2 py-0.5 rounded-full">{{ rules.count
-                        }}</span>
-                </button>
-                <button
-                    class="w-full text-left px-3 py-2 rounded-lg text-slate-600 hover:bg-slate-100 font-medium flex justify-between items-center group transition-colors">
-                    <span>Templates</span>
-                    <span class="bg-slate-200 text-slate-600 text-xs px-2 py-0.5 rounded-full">0</span>
-                </button>
-            </nav>
+<!-- AUTOMATION CENTER MODAL - Monday.com Style -->
+<div class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 backdrop-blur-sm p-4"
+    x-data="{ activeTab: 'manage', activeSubTab: 'automations' }"
+    @keydown.escape.window="document.getElementById('automation-modal-container').innerHTML = ''">
 
-            <div class="mt-auto">
-                <div class="p-3 bg-indigo-600 rounded-xl text-white">
-                    <p class="font-bold text-sm mb-1">Usage</p>
-                    <div class="w-full bg-indigo-800 rounded-full h-2 mb-2">
-                        <div class="bg-white rounded-full h-2 w-[5%]"></div>
+    <div
+        class="flex flex-col h-[85vh] w-[95vw] max-w-5xl bg-white rounded-2xl shadow-2xl overflow-hidden animate-scale-in">
+
+        <!-- Header Bar - Like monday.com -->
+        <div class="flex items-center justify-between px-6 py-4 border-b border-slate-200 bg-white">
+            <div class="flex items-center gap-3">
+                <div class="flex items-center gap-2">
+                    <div
+                        class="w-8 h-8 bg-gradient-to-br from-purple-500 to-indigo-600 rounded-lg flex items-center justify-center text-white shadow">
+                        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M13 10V3L4 14h7v7l9-11h-7z" />
+                        </svg>
                     </div>
-                    <p class="text-xs text-indigo-100">0 / 1000 actions used</p>
+                    <span class="font-bold text-slate-800 text-lg">Automations</span>
+                    <span class="text-slate-500">{{ board.name }}</span>
                 </div>
             </div>
-        </div>
 
-        <!-- Main Content -->
-        <div class="flex-1 flex flex-col bg-white">
-            <!-- Header -->
-            <div class="h-16 border-b border-slate-100 flex items-center justify-between px-8">
-                <h3 class="font-bold text-lg text-slate-800">Board Automations</h3>
-                <a href="{% url 'create_rule' board.id %}"
-                    class="btn-primary flex items-center gap-2 px-5 py-2 rounded-lg font-bold text-sm shadow-md hover:shadow-lg transition-all"
-                    hx-target="#automation-modal-container" hx-push-url="true">
-                    <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
-                    </svg>
-                    New Automation
-                </a>
+            <!-- Create / Manage Tabs -->
+            <div class="flex items-center bg-slate-100 rounded-lg p-1">
+                <button @click="activeTab = 'create'"
+                    :class="activeTab === 'create' ? 'bg-white shadow-sm text-slate-800' : 'text-slate-500 hover:text-slate-700'"
+                    class="px-4 py-2 rounded-md text-sm font-semibold transition-all">
+                    Create
+                </button>
+                <button @click="activeTab = 'manage'"
+                    :class="activeTab === 'manage' ? 'bg-white shadow-sm text-slate-800' : 'text-slate-500 hover:text-slate-700'"
+                    class="px-4 py-2 rounded-md text-sm font-semibold transition-all flex items-center gap-2">
+                    Manage
+                    <span class="bg-indigo-100 text-indigo-700 text-xs font-bold px-2 py-0.5 rounded-full">
+                        {% if rules %}{{ rules|length }}{% else %}0{% endif %}
+                    </span>
+                </button>
             </div>
 
-            <!-- List -->
-            <div class="flex-1 overflow-y-auto p-8">
-                <div class="grid gap-4">
-                    {% for rule in rules %}
-                    <div
-                        class="group border border-slate-200 rounded-xl p-4 hover:shadow-md hover:border-indigo-300 transition-all bg-white relative">
-                        <div class="flex items-start gap-4">
-                            <div
-                                class="h-10 w-10 rounded-lg bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-white shadow-sm shrink-0">
-                                <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                        d="M13 10V3L4 14h7v7l9-11h-7z" />
-                                </svg>
+            <!-- Close Button -->
+            <button @click="document.getElementById('automation-modal-container').innerHTML = ''"
+                class="p-2 hover:bg-slate-100 rounded-lg transition-colors">
+                <svg class="w-5 h-5 text-slate-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+            </button>
+        </div>
+
+        <!-- Content Area -->
+        <div class="flex-1 flex overflow-hidden">
+
+            <!-- CREATE TAB -->
+            <div x-show="activeTab === 'create'" x-cloak class="flex-1 flex flex-col">
+                <!-- Header -->
+                <div class="p-6 border-b border-slate-100">
+                    <h2 class="text-xl font-bold text-slate-800">Manage your board automations</h2>
+                    <div class="flex items-center gap-4 mt-4">
+                        <a href="{% url 'create_rule' board.id %}"
+                            class="bg-indigo-600 hover:bg-indigo-700 text-white px-5 py-2.5 rounded-lg font-bold shadow-lg shadow-indigo-200 transition-all flex items-center gap-2">
+                            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M12 4v16m8-8H4" />
+                            </svg>
+                            Create automation
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Template Categories -->
+                <div class="flex-1 p-6 overflow-y-auto">
+                    <h3 class="text-sm font-bold text-slate-400 uppercase tracking-wider mb-4">Popular Templates</h3>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <!-- Template Card 1 -->
+                        <div
+                            class="p-4 border border-slate-200 rounded-xl hover:border-indigo-300 hover:shadow-md cursor-pointer transition-all group">
+                            <div class="flex items-start gap-4">
+                                <div
+                                    class="w-10 h-10 rounded-lg bg-purple-100 text-purple-600 flex items-center justify-center group-hover:scale-110 transition-transform">
+                                    <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                    </svg>
+                                </div>
+                                <div>
+                                    <h4 class="font-bold text-slate-800">When status changes to Done, notify someone
+                                    </h4>
+                                    <p class="text-sm text-slate-500 mt-1">Great for keeping team updated</p>
+                                </div>
                             </div>
-                            <div class="flex-1">
-                                <h4 class="font-bold text-slate-800 text-base leading-snug">{{ rule.name }}</h4>
-                                <div class="flex items-center gap-4 mt-2">
-                                    <span
-                                        class="text-xs font-bold text-slate-400 uppercase tracking-wider">Active</span>
+                        </div>
+
+                        <!-- Template Card 2 -->
+                        <div
+                            class="p-4 border border-slate-200 rounded-xl hover:border-indigo-300 hover:shadow-md cursor-pointer transition-all group">
+                            <div class="flex items-start gap-4">
+                                <div
+                                    class="w-10 h-10 rounded-lg bg-orange-100 text-orange-600 flex items-center justify-center group-hover:scale-110 transition-transform">
+                                    <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
+                                    </svg>
+                                </div>
+                                <div>
+                                    <h4 class="font-bold text-slate-800">When status changes, move item to group</h4>
+                                    <p class="text-sm text-slate-500 mt-1">Organize items automatically</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Template Card 3 -->
+                        <div
+                            class="p-4 border border-slate-200 rounded-xl hover:border-indigo-300 hover:shadow-md cursor-pointer transition-all group">
+                            <div class="flex items-start gap-4">
+                                <div
+                                    class="w-10 h-10 rounded-lg bg-green-100 text-green-600 flex items-center justify-center group-hover:scale-110 transition-transform">
+                                    <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                                    </svg>
+                                </div>
+                                <div>
+                                    <h4 class="font-bold text-slate-800">When item created, assign person</h4>
+                                    <p class="text-sm text-slate-500 mt-1">Auto-assign new tasks</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Template Card 4 -->
+                        <div
+                            class="p-4 border border-slate-200 rounded-xl hover:border-indigo-300 hover:shadow-md cursor-pointer transition-all group">
+                            <div class="flex items-start gap-4">
+                                <div
+                                    class="w-10 h-10 rounded-lg bg-blue-100 text-blue-600 flex items-center justify-center group-hover:scale-110 transition-transform">
+                                    <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
+                                    </svg>
+                                </div>
+                                <div>
+                                    <h4 class="font-bold text-slate-800">When changes occur, create update</h4>
+                                    <p class="text-sm text-slate-500 mt-1">Track all changes automatically</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- MANAGE TAB -->
+            <div x-show="activeTab === 'manage'" x-cloak class="flex-1 flex flex-col">
+                <!-- Sub-tabs -->
+                <div class="px-6 pt-4 border-b border-slate-200">
+                    <nav class="flex gap-6">
+                        <button @click="activeSubTab = 'automations'"
+                            :class="activeSubTab === 'automations' ? 'border-indigo-500 text-indigo-600' : 'border-transparent text-slate-500 hover:text-slate-700'"
+                            class="pb-3 border-b-2 font-medium transition-colors">
+                            Automations
+                        </button>
+                        <button @click="activeSubTab = 'history'"
+                            :class="activeSubTab === 'history' ? 'border-indigo-500 text-indigo-600' : 'border-transparent text-slate-500 hover:text-slate-700'"
+                            class="pb-3 border-b-2 font-medium transition-colors">
+                            Run history
+                        </button>
+                        <button @click="activeSubTab = 'usage'"
+                            :class="activeSubTab === 'usage' ? 'border-indigo-500 text-indigo-600' : 'border-transparent text-slate-500 hover:text-slate-700'"
+                            class="pb-3 border-b-2 font-medium transition-colors">
+                            Account usage
+                        </button>
+                    </nav>
+                </div>
+
+                <!-- Automations Sub-tab -->
+                <div x-show="activeSubTab === 'automations'" class="flex-1 overflow-y-auto p-6">
+                    <!-- Search & Filter -->
+                    <div class="flex items-center gap-4 mb-6">
+                        <div class="relative flex-1 max-w-md">
+                            <svg class="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" fill="none"
+                                viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                            </svg>
+                            <input type="text" placeholder="Search automations..."
+                                class="w-full pl-10 pr-4 py-2 bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500">
+                        </div>
+                        <button
+                            class="flex items-center gap-2 px-4 py-2 border border-slate-200 rounded-lg text-slate-600 hover:bg-slate-50">
+                            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
+                            </svg>
+                            Filter
+                        </button>
+                    </div>
+
+                    <!-- Automations List -->
+                    <div class="space-y-3">
+                        {% for rule in rules %}
+                        <div
+                            class="group flex items-center gap-4 p-4 bg-white border border-slate-200 rounded-xl hover:border-indigo-300 hover:shadow-md transition-all">
+                            <!-- Rule Description -->
+                            <div class="flex-1 min-w-0">
+                                <p class="font-medium text-slate-800 text-base leading-relaxed">{{ rule.name }}</p>
+                                <div class="flex items-center gap-3 mt-1.5">
                                     <span class="text-xs text-slate-400">ID: {{ rule.id }}</span>
+                                    {% if rule.is_active %}
+                                    <span class="inline-flex items-center gap-1 text-xs text-green-600 font-medium">
+                                        <span class="w-1.5 h-1.5 bg-green-500 rounded-full"></span>
+                                        Active
+                                    </span>
+                                    {% else %}
+                                    <span class="inline-flex items-center gap-1 text-xs text-slate-400 font-medium">
+                                        <span class="w-1.5 h-1.5 bg-slate-300 rounded-full"></span>
+                                        Inactive
+                                    </span>
+                                    {% endif %}
                                 </div>
                             </div>
 
-                            <!-- Toggle Switch (Visual Only) -->
-                            <div
-                                class="relative inline-block w-10 mr-2 align-middle select-none transition duration-200 ease-in">
-                                <input type="checkbox" name="toggle" id="toggle-{{ rule.id }}"
-                                    class="toggle-checkbox absolute block w-5 h-5 rounded-full bg-white border-4 appearance-none cursor-pointer checked:right-0 right-5"
-                                    checked />
-                                <label for="toggle-{{ rule.id }}"
-                                    class="toggle-label block overflow-hidden h-5 rounded-full bg-indigo-500 cursor-pointer"></label>
-                            </div>
+                            <!-- Toggle Switch -->
+                            {% include 'automation/partials/toggle_switch.html' with rule=rule board=board %}
 
-                            <!-- Menu -->
-                            <div
-                                class="opacity-0 group-hover:opacity-100 transition-opacity absolute top-4 right-14 flex gap-2">
+                            <!-- Actions Menu -->
+                            <div class="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                                 <a href="{% url 'edit_rule' board.id rule.id %}"
-                                    class="p-1.5 text-slate-400 hover:text-indigo-600 hover:bg-slate-50 rounded-md">
+                                    class="p-2 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors"
+                                    title="Edit">
                                     <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                             d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
                                     </svg>
                                 </a>
                                 <form method="POST" action="{% url 'delete_rule' board.id rule.id %}"
-                                    onsubmit="return confirm('Delete?')" style="display:inline;">
+                                    onsubmit="return confirm('Delete this automation?')" class="inline">
                                     {% csrf_token %}
-                                    <button class="p-1.5 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-md">
+                                    <button
+                                        class="p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                                        title="Delete">
                                         <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                                 d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
                                         </svg>
                                     </button>
                                 </form>
+                                <button
+                                    class="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-50 rounded-lg transition-colors"
+                                    title="More">
+                                    <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z" />
+                                    </svg>
+                                </button>
                             </div>
                         </div>
-                    </div>
-                    {% empty %}
-                    <div class="text-center py-16">
-                        <div class="inline-flex items-center justify-center w-16 h-16 rounded-full bg-slate-100 mb-4">
-                            <svg class="w-8 h-8 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                    d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-                            </svg>
+                        {% empty %}
+                        <div class="text-center py-16">
+                            <div
+                                class="inline-flex items-center justify-center w-16 h-16 rounded-full bg-slate-100 mb-4">
+                                <svg class="w-8 h-8 text-slate-400" fill="none" viewBox="0 0 24 24"
+                                    stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M13 10V3L4 14h7v7l9-11h-7z" />
+                                </svg>
+                            </div>
+                            <h3 class="text-lg font-bold text-slate-900">No automations yet</h3>
+                            <p class="mt-1 text-slate-500 mb-6">Create your first automation to save time.</p>
+                            <a href="{% url 'create_rule' board.id %}"
+                                class="inline-flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white px-5 py-2.5 rounded-lg font-bold shadow-lg shadow-indigo-200 transition-all">
+                                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M12 4v16m8-8H4" />
+                                </svg>
+                                Create automation
+                            </a>
                         </div>
-                        <h3 class="text-lg font-medium text-slate-900">No automations yet</h3>
-                        <p class="mt-1 text-slate-500">Create custom recipes to save time.</p>
+                        {% endfor %}
                     </div>
-                    {% endfor %}
                 </div>
-            </div>
 
-            <!-- Footer -->
-            <div class="h-14 border-t border-slate-100 flex items-center justify-end px-8 bg-slate-50/50">
-                <button onclick="document.getElementById('automation-modal-container').innerHTML = '';"
-                    class="text-slate-500 hover:text-slate-800 font-semibold text-sm">Close</button>
+                <!-- History Sub-tab -->
+                <div x-show="activeSubTab === 'history'" class="flex-1 overflow-y-auto"
+                    hx-get="{% url 'run_history' board.id %}" hx-trigger="intersect once" hx-swap="innerHTML">
+                    <div class="flex items-center justify-center h-full text-slate-400">
+                        <svg class="animate-spin h-6 w-6" fill="none" viewBox="0 0 24 24">
+                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4">
+                            </circle>
+                            <path class="opacity-75" fill="currentColor"
+                                d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z">
+                            </path>
+                        </svg>
+                    </div>
+                </div>
+
+                <!-- Usage Sub-tab -->
+                <div x-show="activeSubTab === 'usage'" class="flex-1 overflow-y-auto p-6">
+                    <div class="max-w-lg mx-auto">
+                        <h3 class="text-lg font-bold text-slate-800 mb-6">Account Usage</h3>
+
+                        <div
+                            class="bg-gradient-to-br from-indigo-500 to-purple-600 rounded-2xl p-6 text-white shadow-xl">
+                            <div class="flex items-center justify-between mb-4">
+                                <span class="text-indigo-100 font-medium">Actions used this month</span>
+                                <span class="text-2xl font-bold">0 / 25,000</span>
+                            </div>
+                            <div class="w-full bg-white/20 rounded-full h-3">
+                                <div class="bg-white rounded-full h-3 w-[1%]"></div>
+                            </div>
+                            <p class="text-indigo-200 text-sm mt-4">
+                                Your automations have plenty of room to grow!
+                            </p>
+                        </div>
+
+                        <div class="mt-6 p-4 bg-slate-50 rounded-xl">
+                            <h4 class="font-bold text-slate-800 mb-2">What counts as an action?</h4>
+                            <p class="text-sm text-slate-600">
+                                Each time an automation runs successfully, it counts as one action.
+                                For example, if "When status changes, notify someone" runs 10 times, that's 10 actions.
+                            </p>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
+</div>
+
+<style>
+    [x-cloak] {
+        display: none !important;
+    }
+</style>

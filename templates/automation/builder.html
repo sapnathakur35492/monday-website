@@ -36,8 +36,9 @@
                             d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
                     </svg>
                     Board Automations
-                    <span class="ml-auto bg-slate-200 text-slate-600 px-2 py-0.5 rounded-full text-xs font-bold">{{
-                        board.automations.count }}</span>
+                    <span class="ml-auto bg-slate-200 text-slate-600 px-2 py-0.5 rounded-full text-xs font-bold">
+                        {{ board.automations.count|default:0 }}
+                    </span>
                 </a>
             </nav>
 
@@ -58,8 +59,11 @@
                     <p class="text-slate-500 mt-1">Build your own flow using the sentence builder below.</p>
                 </div>
                 <div class="flex items-center gap-3">
-                    <button type="button" onclick="document.getElementById('automation-modal-container').innerHTML = ''"
-                        class="text-slate-500 hover:text-slate-700 font-medium px-4 py-2 hover:bg-slate-50 rounded-lg transition-colors">Cancel</button>
+                    <button type="button"
+                        onclick="(function(){var c=document.getElementById('automation-modal-container'); if(c){c.innerHTML='';} else {window.location.href='{% url 'automation_list' board.id %}';}})()"
+                        class="text-slate-500 hover:text-slate-700 font-medium px-4 py-2 hover:bg-slate-50 rounded-lg transition-colors">
+                        Cancel
+                    </button>
                     <button onclick="document.getElementById('automation-form').submit()"
                         class="bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-2.5 rounded-lg font-bold shadow-lg shadow-indigo-200 transition-all transform hover:scale-105 active:scale-95 flex items-center gap-2">
                         <span>Create Automation</span>

@@ -1,4 +1,5 @@
 {% extends "webapp/base_app.html" %}
+{% load static %}
 
 {% block app_content %}
 <div class="h-full flex flex-col bg-slate-50/50 relative overflow-hidden">
@@ -61,12 +62,13 @@
                         style="border-left: 4px solid {{ status.color|default:'#cbd5e1' }}">
                         {{ status }}
                     </span>
-                    <span class="text-xs font-bold text-slate-400 bg-slate-100 px-2 py-1 rounded-full">{{ items|length
-                        }}</span>
+                    <!-- Count badge is now driven by JS so it always stays in sync -->
+                    <span
+                        class="js-kanban-count text-xs font-bold text-slate-400 bg-slate-100 px-2 py-1 rounded-full">0</span>
                 </div>
 
                 <!-- Cards Container -->
-                <div class="flex-1 overflow-y-auto p-3 space-y-3 kanban-col custom-scrollbar"
+                <div class="flex-1 overflow-y-auto p-3 space-y-3 kanban-col custom-scrollbar kanban-content kanban-column"
                     data-status="{{ status }}">
                     {% for item in items %}
                     <div class="glass-card bg-white p-4 rounded-xl shadow-sm border border-slate-100/60 cursor-move hover:shadow-md hover:border-indigo-200 transition-all group relative overflow-hidden"
@@ -134,61 +136,13 @@
     </div>
 </div>
 
-<!-- SortableJS -->
-<script src="https://cdnjs.cloudflare.com/ajax/libs/Sortable/1.15.0/Sortable.min.js"></script>
+<!-- Dragula CDN -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/dragula/3.7.3/dragula.min.css" />
+<script src="https://cdnjs.cloudflare.com/ajax/libs/dragula/3.7.3/dragula.min.js"></script>
+
+<!-- External Kanban Logic -->
+<script src="{% static 'js/kanban.js' %}"></script>
 <script>
-    document.addEventListener('DOMContentLoaded', () => {
-        const columns = document.querySelectorAll('.kanban-col');
-
-        const csrfToken = '{{ csrf_token }}';
-
-        columns.forEach(col => {
-            new Sortable(col, {
-                group: 'kanban', // set both lists to same group
-                animation: 200,
-                ghostClass: 'bg-indigo-50/50',
-                dragClass: 'opacity-50',
-                chosenClass: 'scale-[1.02] shadow-xl rotate-1 cursor-grabbing',
-                onEnd: function (evt) {
-                    const itemEl = evt.item;
-                    const newStatus = evt.to.dataset.status;
-                    const itemId = itemEl.dataset.id;
-                    const oldStatus = evt.from.dataset.status;
-
-                    if (newStatus === oldStatus) return; // No change
-
-                    // Sync with Backend
-                    fetch('{% url "update_item_order" %}', {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                            'X-CSRFToken': csrfToken
-                        },
-                        body: JSON.stringify({
-                            itemId: itemId,
-                            newStatus: newStatus
-                        })
-                    })
-                        .then(response => response.json())
-                        .then(data => {
-                            console.log('Update success:', data);
-                            if (newStatus === 'Done') {
-                                try {
-                                    confetti({
-                                        particleCount: 100,
-                                        spread: 70,
-                                        origin: { y: 0.6 },
-                                        colors: ['#22c55e', '#ec4899', '#f59e0b']
-                                    });
-                                } catch (e) { }
-                            }
-                        })
-                        .catch(error => {
-                            console.error('Error updating order:', error);
-                        });
-                }
-            });
-        });
-    });
+    // Pass initial counts or other server data if needed by JS (optional)
 </script>
 {% endblock %}
