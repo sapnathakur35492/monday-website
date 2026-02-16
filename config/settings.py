@@ -30,6 +30,7 @@ ALLOWED_HOSTS = [
     'www.amjim.com',
     'localhost',
     '127.0.0.1',
+    'testserver',  # Django test client
 ]
 
 

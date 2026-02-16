@@ -10,6 +10,7 @@ urlpatterns = [
     path('billing/', views.billing_dashboard, name='billing'),
     path('team/', views.team_list, name='team_list'),
     path('team/invite/', views.invite_member, name='invite_member'),
+    path('team/remove/<int:membership_id>/', views.remove_member, name='remove_member'),
     path('profile/', views.profile_view, name='profile'),
     path('notifications/', views.notifications_view, name='notifications'),
 ]

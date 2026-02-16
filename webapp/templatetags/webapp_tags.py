@@ -33,6 +33,16 @@ def make_list_comma(value):
     return [x.strip() for x in value.split(',')]
 
 @register.filter
+def make_list_pipe(value):
+    """
+    Converts a pipe-separated string into a list.
+    Usage: {{ "A|B|C"|make_list_pipe }}
+    """
+    if not value:
+        return []
+    return [x.strip() for x in value.split('|')]
+
+@register.filter
 def clean_username(value):
     """
     Cleans a username by removing trailing numbers for professional display.

@@ -51,7 +51,18 @@
                         {{ membership.joined_at|date:"M d, Y" }}
                     </td>
                     <td class="px-6 py-4">
-                        <button class="text-slate-400 hover:text-red-600 transition-colors">Remove</button>
+                        {% if membership.user_id == org.owner_id %}
+                        <span class="text-xs font-semibold px-2 py-1 rounded-full bg-slate-100 text-slate-500">Owner</span>
+                        {% else %}
+                        <form method="POST" action="{% url 'remove_member' membership.id %}"
+                            onsubmit="return confirm('Remove this member from the team?');" class="inline">
+                            {% csrf_token %}
+                            <button type="submit"
+                                class="text-slate-400 hover:text-red-600 text-sm font-medium border border-transparent hover:border-red-200 rounded-lg px-3 py-1 hover:bg-red-50 transition-colors">
+                                Remove
+                            </button>
+                        </form>
+                        {% endif %}
                     </td>
                 </tr>
                 {% endfor %}

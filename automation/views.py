@@ -163,23 +163,36 @@ def create_rule(request, board_id):
         )
         return redirect('automation_list', board_id=board.id)
         
-    if request.headers.get('HX-Request'):
-        return render(request, 'automation/builder.html', {
-            'board': board,
-            'triggers': triggers,
-            'actions': actions,
-            'partial': True
-        })
+    # Pre-fill from wizard (URL params)
+    initial_trigger = request.GET.get('trigger', '')
+    initial_action = request.GET.get('action', '')
+    initial_trigger_name = ''
+    initial_action_name = ''
+    if initial_trigger:
+        th = AutomationRegistry.get_trigger(initial_trigger)
+        if th:
+            initial_trigger_name = th.name
+    if initial_action:
+        ah = AutomationRegistry.get_action(initial_action)
+        if ah:
+            initial_action_name = ah.name
 
-    base_template = 'automation/partial_base.html' if request.headers.get('HX-Request') else 'base.html'
-
-    return render(request, 'automation/builder.html', {
+    ctx = {
         'board': board,
         'triggers': triggers,
         'actions': actions,
-        'base_template': base_template,
-        'partial': request.headers.get('HX-Request')
-    })
+        'initial_trigger': initial_trigger,
+        'initial_action': initial_action,
+        'initial_trigger_name': initial_trigger_name,
+        'initial_action_name': initial_action_name,
+    }
+    if request.headers.get('HX-Request'):
+        ctx['partial'] = True
+        return render(request, 'automation/builder.html', ctx)
+
+    ctx['base_template'] = 'automation/partial_base.html'
+    ctx['partial'] = False
+    return render(request, 'automation/builder.html', ctx)
 
 @require_POST
 @login_required

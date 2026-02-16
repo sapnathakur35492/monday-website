@@ -7,13 +7,15 @@ def landing_page(request):
     Renders the public landing page with dynamic content.
     """
     page = Page.objects.filter(slug='home', is_published=True).first()
-    features = Feature.objects.filter(is_active=True).order_by('order')[:6] # Show top 6 features
-    plans = PricingPlan.objects.prefetch_related('features').all().order_by('order') # Show all plans
-    
+    features = Feature.objects.filter(is_active=True).order_by('order')[:6]  # Show top 6 features
+    plans = list(PricingPlan.objects.prefetch_related('features').filter(is_active=True).order_by('order'))
+    min_plan_price = min((float(p.price) for p in plans), default=None) if plans else None
+
     return render(request, 'marketing/landing.html', {
         'page': page,
         'features': features,
-        'plans': plans
+        'plans': plans,
+        'min_plan_price': min_plan_price,
     })
 
 def features(request):

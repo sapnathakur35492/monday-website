@@ -15,6 +15,7 @@ from .forms import SignUpForm, LoginForm
 import uuid
 from django.core.mail import send_mail
 from django.conf import settings
+from django.template.loader import render_to_string
 
 def verify_email_view(request, token):
     try:
@@ -66,18 +67,38 @@ def signup_view(request):
             user.is_verified = False
             user.save()
             
-            # Send Verification Email
+            # Send Verification Email (professional HTML template)
             verification_link = request.build_absolute_uri(f'/core/verify/{token}/')
+            subject = 'Verify your email for ProjectFlow'
+
+            # Plain-text fallback
+            display_name = user.first_name or user.username or user.email
+            text_body = (
+                f"Hi {display_name},\n\n"
+                "Welcome to ProjectFlow! Please confirm your email address to activate your account and access your workspace.\n\n"
+                f"Verification link: {verification_link}\n\n"
+                "If you did not create a ProjectFlow account, you can safely ignore this email.\n"
+            )
+
+            # HTML body using template
+            html_body = render_to_string(
+                'core/email_verification.html',
+                {
+                    'user': user,
+                    'verification_link': verification_link,
+                },
+            )
+
             try:
                 send_mail(
-                    'Verify your email for ProjectFlow',
-                    f'Click this link to verify your account: {verification_link}',
-                    'noreply@projectflow.com',
+                    subject,
+                    text_body,
+                    'ProjectFlow <noreply@projectflow.com>',
                     [user.email],
                     fail_silently=True,
-                    html_message=f'Click <a href="{verification_link}">here</a> to verify your account.'
+                    html_message=html_body,
                 )
-                print(f"Verification Link for {user.email}: {verification_link}") # For local testing
+                print(f"Verification Link for {user.email}: {verification_link}")  # For local testing
             except Exception as e:
                 print(f"Error sending email: {e}")
             
@@ -241,6 +262,48 @@ def team_list(request):
     members = org.memberships.select_related('user').all()
     
     return render(request, 'core/team_list.html', {'org': org, 'members': members})
+
+
+@login_required
+def remove_member(request, membership_id):
+    """
+    Remove a member from the current organization.
+    Only the organization owner can remove other members;
+    members can remove themselves (leave team).
+    """
+    from django.contrib import messages
+    from core.models import Membership
+    
+    membership = get_object_or_404(Membership, id=membership_id)
+    org = membership.organization
+    
+    # Determine acting user's organization (same logic as team_list)
+    user_org = request.user.owned_organizations.first()
+    if not user_org:
+        m = request.user.memberships.first()
+        user_org = m.organization if m else None
+    
+    # Safety: organization must match
+    if not user_org or user_org != org:
+        messages.error(request, "You don't have permission to change this member.")
+        return redirect('team_list')
+    
+    # Prevent removing the organization owner from their own org
+    if membership.user_id == org.owner_id:
+        messages.warning(request, "You cannot remove the organization owner.")
+        return redirect('team_list')
+    
+    # Allow owner to remove anyone; members can remove themselves
+    if request.user == org.owner or request.user == membership.user:
+        membership.delete()
+        if request.user == membership.user:
+            messages.success(request, "You have left this team.")
+        else:
+            messages.success(request, f"{membership.user.email} has been removed from the team.")
+    else:
+        messages.error(request, "You don't have permission to remove this member.")
+    
+    return redirect('team_list')
 
 @login_required
 def invite_member(request):

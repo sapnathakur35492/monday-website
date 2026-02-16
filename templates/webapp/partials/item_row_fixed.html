@@ -28,12 +28,12 @@
             currentVal: '{{ val|default:'Label' }}',
             statusColors: {
                 'Done': 'bg-green-500 shadow-sm text-white',
-                'Working on it': 'bg-amber-400 text-white',
+                'Working on it': 'bg-amber-500 text-white',
                 'Stuck': 'bg-red-500 text-white',
-                'In Progress': 'bg-blue-400 text-white',
-                'Not Started': 'bg-slate-300 text-slate-600',
+                'In Progress': 'bg-blue-500 text-white',
+                'Not Started': 'bg-slate-500 text-white',
                 'On Hold': 'bg-slate-400 text-white',
-                'Label': 'bg-slate-300 text-slate-600'
+                'Label': 'bg-slate-400 text-slate-100'
             },
             changeStatus(newVal) {
                 this.currentVal = newVal;
@@ -71,14 +71,14 @@
                     hx-vals='{"action_value": "{{ choice }}"}' hx-target="#item-{{ item.id }}" hx-swap="outerHTML"
                     class="px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 cursor-pointer flex items-center gap-3 transition-colors">
                     <span class="w-2.5 h-2.5 rounded-full"
-                        :class="statusColors['{{ choice }}'] || 'bg-slate-300'"></span>
+                        :class="statusColors['{{ choice }}'] || 'bg-slate-500'"></span>
                     {{ choice }}
                 </div>
                 {% endfor %}
                 {% else %}
                 <div @click="changeStatus('Not Started')" hx-post="{% url 'update_status' item.id col.id %}"
                     hx-vals='{"action_value": "Not Started"}' hx-target="#item-{{ item.id }}" hx-swap="outerHTML"
-                    class="px-4 py-2 hover:bg-slate-50 cursor-pointer text-sm font-medium border-l-4 border-slate-300 hover:border-slate-400 transition-all pl-3">
+                    class="px-4 py-2 hover:bg-slate-100 cursor-pointer text-sm font-medium border-l-4 border-slate-500 hover:border-slate-600 transition-all pl-3 text-slate-700">
                     Not Started</div>
                 <div @click="changeStatus('Working on it')" hx-post="{% url 'update_status' item.id col.id %}"
                     hx-vals='{"action_value": "Working on it"}' hx-target="#item-{{ item.id }}" hx-swap="outerHTML"

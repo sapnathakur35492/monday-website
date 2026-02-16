@@ -152,3 +152,31 @@ class ComprehensiveAutomationTest(TestCase):
         new_item.refresh_from_db()
         val = new_item.values.get(str(self.status_col.id))
         self.assertEqual(val, 'Done')
+
+    def test_e2e_status_change_via_signal(self):
+        """
+        End-to-end: Update item status via .save() (signal fires) -> automation runs -> update created.
+        No manual run_automations; pure signal flow.
+        """
+        rule = AutomationRule.objects.create(
+            board=self.board,
+            name='Done creates update',
+            is_active=True,
+            trigger_type='status_change',
+            trigger_config={'column_id': self.status_col.id, 'value': 'Done'},
+            action_type='create_update',
+            action_config={'message': 'Task marked done!'}
+        )
+        self.assertFalse(self.item.updates.exists())
+        # Change status via model save (as the UI would)
+        self.item.values[str(self.status_col.id)] = 'Done'
+        self.item.save()
+        self.item.refresh_from_db()
+        self.assertTrue(
+            self.item.updates.filter(body__icontains='Task marked done').exists(),
+            'Update should be created by automation when status changed to Done'
+        )
+        self.assertTrue(
+            AutomationLog.objects.filter(rule=rule, status='success').exists(),
+            'AutomationLog success should be created'
+        )

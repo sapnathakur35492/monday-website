@@ -16,7 +16,6 @@
                 {% else %}
                 {{ request.user.username|clean_username }}!
                 {% endif %}
-                <span class="animate-wave inline-block origin-bottom-right">👋</span>
             </h1>
 
             <p class="text-indigo-100 text-lg font-medium italic opacity-90">
@@ -80,7 +79,7 @@
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
                     </svg>
                     <p>No active tasks assigned to you.</p>
-                    <p class="text-sm">Enjoy your day! 🎉</p>
+                    <p class="text-sm text-slate-500">You're all caught up for now.</p>
                 </div>
                 {% endif %}
             </div>

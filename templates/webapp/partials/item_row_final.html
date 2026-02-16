@@ -28,12 +28,12 @@
             currentVal: '{{ val|default:'Label' }}',
             statusColors: {
                 'Done': 'bg-green-500 shadow-sm text-white',
-                'Working on it': 'bg-amber-400 text-white',
+                'Working on it': 'bg-amber-500 text-white',
                 'Stuck': 'bg-red-500 text-white',
-                'In Progress': 'bg-blue-400 text-white',
-                'Not Started': 'bg-slate-300 text-slate-600',
+                'In Progress': 'bg-blue-500 text-white',
+                'Not Started': 'bg-slate-500 text-white',
                 'On Hold': 'bg-slate-400 text-white',
-                'Label': 'bg-slate-300 text-slate-600'
+                'Label': 'bg-slate-400 text-slate-100'
             },
             changeStatus(newVal) {
                 this.currentVal = newVal;
@@ -69,19 +69,19 @@
 
                     <!-- Menu -->
                     <div x-show="open" @click.outside="open = false" x-transition:enter="ease-out duration-300"
-                        x-transition:enter-start="opacity-0 scale-90 translate-y-4"
+                        x-transition:enter-start="opacity-0 scale-95 translate-y-2"
                         x-transition:enter-end="opacity-100 scale-100 translate-y-0"
                         x-transition:leave="ease-in duration-200"
                         x-transition:leave-start="opacity-100 scale-100 translate-y-0"
-                        x-transition:leave-end="opacity-0 scale-95 translate-y-4"
-                        class="relative bg-white rounded-2xl shadow-2xl p-6 w-[320px] max-w-[90vw] animate-scale-in">
+                        x-transition:leave-end="opacity-0 scale-95 translate-y-2"
+                        class="relative bg-white rounded-2xl shadow-xl ring-1 ring-slate-200/60 p-6 w-[340px] max-w-[90vw] animate-scale-in">
 
-                        <div class="text-center mb-6">
-                            <h3 class="text-lg font-bold text-slate-800">Update Status</h3>
-                            <p class="text-slate-400 text-xs mt-1">Select a new status for this item</p>
+                        <div class="text-center mb-5">
+                            <h3 class="text-xl font-bold text-slate-800 tracking-tight">Update Status</h3>
+                            <p class="text-slate-500 text-sm mt-1.5">Select a new status for this item</p>
                         </div>
 
-                        <div class="grid grid-cols-1 gap-2 max-h-[60vh] overflow-y-auto pr-1">
+                        <div class="grid grid-cols-1 gap-2.5 max-h-[60vh] overflow-y-auto pr-0.5">
                             {% with choices=col.settings.choices|default:'' %}
                             {% if choices %}
                             {% for choice in choices %}
@@ -89,16 +89,17 @@
                                 hx-post="{% url 'update_status' item.id col.id %}"
                                 hx-vals='{"action_value": "{{ choice }}"}' hx-target="#item-{{ item.id }}"
                                 hx-swap="outerHTML"
-                                class="p-3 rounded-xl cursor-pointer hover:bg-slate-50 transition-all shadow-sm border border-slate-100 flex items-center justify-between group">
+                                class="p-3.5 rounded-xl cursor-pointer transition-all flex items-center justify-between gap-3 border group hover:border-slate-200 hover:shadow-sm active:scale-[0.99]"
+                                :class="currentVal === '{{ choice }}' ? 'bg-slate-50 border-slate-200 shadow-sm' : 'bg-white border-slate-100'">
 
-                                <span class="font-bold text-sm text-slate-700">{{ choice }}</span>
+                                <span class="font-semibold text-sm text-slate-700">{{ choice }}</span>
 
                                 <span
-                                    class="w-6 h-6 rounded-full flex items-center justify-center shadow-inner ring-2 ring-white"
-                                    :class="statusColors['{{ choice }}'] || 'bg-slate-200'" style="min-width: 1.5rem;">
-                                    <svg x-show="currentVal === '{{ choice }}'"
-                                        class="w-3 h-3 text-white drop-shadow-md" fill="none" viewBox="0 0 24 24"
-                                        stroke="currentColor" stroke-width="3">
+                                    class="w-7 h-7 rounded-full flex items-center justify-center shadow-inner ring-2 ring-white shrink-0"
+                                    :class="statusColors['{{ choice }}'] || 'bg-slate-500 text-white'">
+                                    <svg x-show="currentVal === '{{ choice }}'" x-cloak
+                                        class="w-4 h-4 text-white drop-shadow" fill="none" viewBox="0 0 24 24"
+                                        stroke="currentColor" stroke-width="2.5">
                                         <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
                                     </svg>
                                 </span>
@@ -108,11 +109,10 @@
                             <!-- Default Options -->
                             <div @click="changeStatus('Done')" hx-post="{% url 'update_status' item.id col.id %}"
                                 hx-vals='{"action_value": "Done"}' hx-target="#item-{{ item.id }}" hx-swap="outerHTML"
-                                class="p-4 rounded-xl cursor-pointer bg-green-500 text-white shadow-lg shadow-green-200 hover:shadow-green-300 hover:-translate-y-0.5 transition-all flex items-center justify-between font-bold">
+                                class="p-4 rounded-xl cursor-pointer bg-green-500 text-white shadow-md hover:shadow-lg hover:brightness-110 active:scale-[0.99] transition-all flex items-center justify-between font-semibold text-sm">
                                 <span>Done</span>
-                                <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                        d="M5 13l4 4L19 7" />
+                                <svg class="w-5 h-5 opacity-90" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
                                 </svg>
                             </div>
 
@@ -120,37 +120,40 @@
                                 hx-post="{% url 'update_status' item.id col.id %}"
                                 hx-vals='{"action_value": "Working on it"}' hx-target="#item-{{ item.id }}"
                                 hx-swap="outerHTML"
-                                class="p-4 rounded-xl cursor-pointer bg-amber-400 text-white shadow-lg shadow-amber-200 hover:shadow-amber-300 hover:-translate-y-0.5 transition-all flex items-center justify-between font-bold">
+                                class="p-4 rounded-xl cursor-pointer bg-amber-500 text-white shadow-md hover:shadow-lg hover:brightness-110 active:scale-[0.99] transition-all flex items-center justify-between font-semibold text-sm">
                                 <span>Working on it</span>
-                                <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                        d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                <svg class="w-5 h-5 opacity-90" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                                 </svg>
                             </div>
 
                             <div @click="changeStatus('Stuck')" hx-post="{% url 'update_status' item.id col.id %}"
                                 hx-vals='{"action_value": "Stuck"}' hx-target="#item-{{ item.id }}" hx-swap="outerHTML"
-                                class="p-4 rounded-xl cursor-pointer bg-red-500 text-white shadow-lg shadow-red-200 hover:shadow-red-300 hover:-translate-y-0.5 transition-all flex items-center justify-between font-bold">
+                                class="p-4 rounded-xl cursor-pointer bg-red-500 text-white shadow-md hover:shadow-lg hover:brightness-110 active:scale-[0.99] transition-all flex items-center justify-between font-semibold text-sm">
                                 <span>Stuck</span>
-                                <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                        d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                                <svg class="w-5 h-5 opacity-90" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
                                 </svg>
                             </div>
 
                             <div @click="changeStatus('Not Started')" hx-post="{% url 'update_status' item.id col.id %}"
                                 hx-vals='{"action_value": "Not Started"}' hx-target="#item-{{ item.id }}"
                                 hx-swap="outerHTML"
-                                class="p-4 rounded-xl cursor-pointer bg-slate-100 text-slate-500 hover:bg-slate-200 transition-all flex items-center justify-between font-bold">
+                                class="p-4 rounded-xl cursor-pointer bg-slate-500 text-white shadow-md hover:shadow-lg hover:brightness-110 active:scale-[0.99] transition-all flex items-center justify-between font-semibold text-sm">
                                 <span>Not Started</span>
+                                <svg class="w-5 h-5 opacity-90" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l4 4m0-8l-4 4" />
+                                </svg>
                             </div>
                             {% endif %}
                             {% endwith %}
                         </div>
 
-                        <div class="mt-6 pt-4 border-t border-slate-100 text-center">
+                        <div class="mt-5 pt-4 border-t border-slate-100 flex justify-center">
                             <button @click="open = false"
-                                class="text-sm font-bold text-slate-400 hover:text-slate-600 transition-colors">Cancel</button>
+                                class="px-4 py-2 rounded-lg text-sm font-semibold text-slate-500 bg-slate-50 border border-slate-200 hover:bg-slate-100 hover:text-slate-700 hover:border-slate-300 transition-colors">
+                                Cancel
+                            </button>
                         </div>
                     </div>
                 </div>

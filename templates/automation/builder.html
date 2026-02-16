@@ -78,10 +78,10 @@
             <div class="flex-1 p-8 bg-slate-50/50 overflow-y-auto flex items-center justify-center">
 
                 <form id="automation-form" method="POST" action="." class="w-full max-w-4xl" x-data="{ 
-                          trigger: null, 
-                          triggerName: 'This happens...',
-                          action: null, 
-                          actionName: 'Do this...'
+                          trigger: '{{ initial_trigger|default:"" }}', 
+                          triggerName: '{{ initial_trigger_name|default:"This happens..." }}',
+                          action: '{{ initial_action|default:"" }}', 
+                          actionName: '{{ initial_action_name|default:"Do this..." }}'
                       }">
                     {% csrf_token %}
                     <input type="hidden" name="trigger" x-model="trigger">

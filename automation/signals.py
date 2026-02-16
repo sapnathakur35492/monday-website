@@ -66,7 +66,11 @@ def execute_automation_actions(sender, instance, created, **kwargs):
     Execute actions after save.
     """
     from automation.service import AutomationEngine
-    
+
+    # Prevent recursion when save was triggered by an automation action (e.g. change_status, move_item)
+    if getattr(instance, '_is_automation_update', False):
+        return
+
     # 1. Trigger: Item Created
     if created or getattr(instance, '_is_new_item', False):
         AutomationEngine.run_automations(
