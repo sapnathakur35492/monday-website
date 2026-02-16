@@ -191,8 +191,9 @@ def create_rule(request, board_id):
         ctx['base_template'] = 'automation/partial_base.html'
         return render(request, 'automation/builder.html', ctx)
 
-    # Full page load: use full base so layout/nav/icons render correctly (avoids huge icon bug)
+    # Full page load: use minimal builder_base (no nav/footer) to avoid base.html footer blurs and layout issues
     ctx['partial'] = False
+    ctx['base_template'] = 'automation/builder_base.html'
     return render(request, 'automation/builder.html', ctx)
 
 @require_POST
