@@ -188,9 +188,10 @@ def create_rule(request, board_id):
     }
     if request.headers.get('HX-Request'):
         ctx['partial'] = True
+        ctx['base_template'] = 'automation/partial_base.html'
         return render(request, 'automation/builder.html', ctx)
 
-    ctx['base_template'] = 'automation/partial_base.html'
+    # Full page load: use full base so layout/nav/icons render correctly (avoids huge icon bug)
     ctx['partial'] = False
     return render(request, 'automation/builder.html', ctx)
 

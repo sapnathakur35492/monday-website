@@ -2,16 +2,16 @@
 {% load static %}
 
 {% block content %}
-<div class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 backdrop-blur-sm p-4 animate-fade-in">
-    <div class="flex h-[80vh] w-[90vw] max-w-6xl bg-white rounded-xl shadow-2xl overflow-hidden animate-scale-in">
+<div class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 backdrop-blur-sm p-4 animate-fade-in overflow-hidden">
+    <div class="flex h-[80vh] w-[90vw] max-w-6xl bg-white rounded-xl shadow-2xl overflow-hidden animate-scale-in min-w-0">
 
         <!-- Sidebar -->
-        <div class="w-64 bg-slate-50 border-r border-slate-200 flex flex-col">
-            <div class="p-6 border-b border-slate-200/50">
-                <div class="flex items-center gap-3 text-slate-800 font-bold text-xl">
+        <div class="w-64 shrink-0 bg-slate-50 border-r border-slate-200 flex flex-col">
+            <div class="p-6 border-b border-slate-200/50 shrink-0">
+                <div class="flex items-center gap-3 text-slate-800 font-bold text-xl min-w-0">
                     <div
-                        class="w-8 h-8 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-lg flex items-center justify-center text-white shadow-sm">
-                        <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        class="w-8 h-8 shrink-0 max-w-[2rem] max-h-[2rem] bg-gradient-to-br from-indigo-500 to-purple-600 rounded-lg flex items-center justify-center text-white shadow-sm">
+                        <svg class="w-5 h-5 shrink-0" style="min-width:1.25rem;max-width:1.25rem;height:1.25rem" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                 d="M13 10V3L4 14h7v7l9-11h-7z" />
                         </svg>
@@ -22,16 +22,16 @@
 
             <nav class="flex-1 p-4 space-y-1 overflow-y-auto">
                 <a href="#"
-                    class="flex items-center gap-3 px-3 py-2.5 bg-indigo-50 text-indigo-700 rounded-lg font-medium">
-                    <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    class="flex items-center gap-3 px-3 py-2.5 bg-indigo-50 text-indigo-700 rounded-lg font-medium shrink-0">
+                    <svg class="w-5 h-5 shrink-0" style="width:1.25rem;height:1.25rem" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                             d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
                     </svg>
                     Automation Center
                 </a>
                 <a href="{% url 'automation_list' board.id %}"
-                    class="flex items-center gap-3 px-3 py-2.5 text-slate-600 hover:bg-slate-100 rounded-lg font-medium transition-colors">
-                    <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    class="flex items-center gap-3 px-3 py-2.5 text-slate-600 hover:bg-slate-100 rounded-lg font-medium transition-colors shrink-0">
+                    <svg class="w-5 h-5 shrink-0" style="width:1.25rem;height:1.25rem" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                             d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
                     </svg>
@@ -65,9 +65,9 @@
                         Cancel
                     </button>
                     <button onclick="document.getElementById('automation-form').submit()"
-                        class="bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-2.5 rounded-lg font-bold shadow-lg shadow-indigo-200 transition-all transform hover:scale-105 active:scale-95 flex items-center gap-2">
+                        class="bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-2.5 rounded-lg font-bold shadow-lg shadow-indigo-200 transition-all transform hover:scale-105 active:scale-95 flex items-center gap-2 shrink-0">
                         <span>Create Automation</span>
-                        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <svg class="w-4 h-4 shrink-0" style="width:1rem;height:1rem" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
                         </svg>
                     </button>
@@ -105,8 +105,8 @@
 
                                     <template x-if="trigger">
                                         <div
-                                            class="w-6 h-6 rounded-full bg-purple-200 flex items-center justify-center text-purple-600">
-                                            <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24"
+                                            class="w-6 h-6 shrink-0 max-w-6 max-h-6 rounded-full bg-purple-200 flex items-center justify-center text-purple-600">
+                                            <svg class="shrink-0" style="width:14px;height:14px" fill="none" viewBox="0 0 24 24"
                                                 stroke="currentColor">
                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5"
                                                     d="M13 10V3L4 14h7v7l9-11h-7z" />
@@ -116,7 +116,7 @@
 
                                     <span class="font-bold tracking-tight" x-text="triggerName"></span>
 
-                                    <svg class="w-4 h-4 opacity-50 transition-transform duration-200"
+                                    <svg class="w-4 h-4 shrink-0 opacity-50 transition-transform duration-200" style="width:1rem;height:1rem"
                                         :class="{'rotate-180': open}" fill="none" viewBox="0 0 24 24"
                                         stroke="currentColor">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -143,8 +143,8 @@
                                         <div @click="trigger = '{{ t.code }}'; triggerName = '{{ t.name }}'; open = false; $dispatch('trigger-selected', '{{ t.code }}')"
                                             class="flex items-center gap-4 p-3 hover:bg-purple-50 rounded-xl cursor-pointer transition-colors group">
                                             <div
-                                                class="w-10 h-10 rounded-lg bg-purple-100 text-purple-600 flex items-center justify-center group-hover:bg-purple-200 group-hover:scale-110 transition-all duration-200">
-                                                <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24"
+                                                class="w-10 h-10 shrink-0 max-w-10 max-h-10 rounded-lg bg-purple-100 text-purple-600 flex items-center justify-center group-hover:bg-purple-200 transition-all duration-200">
+                                                <svg class="shrink-0" style="width:1.25rem;height:1.25rem" fill="none" viewBox="0 0 24 24"
                                                     stroke="currentColor">
                                                     <path stroke-linecap="round" stroke-linejoin="round"
                                                         stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
@@ -183,8 +183,8 @@
 
                                     <template x-if="action">
                                         <div
-                                            class="w-6 h-6 rounded-full bg-orange-200 flex items-center justify-center text-orange-600">
-                                            <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24"
+                                            class="w-6 h-6 shrink-0 max-w-6 max-h-6 rounded-full bg-orange-200 flex items-center justify-center text-orange-600">
+                                            <svg class="shrink-0" style="width:14px;height:14px" fill="none" viewBox="0 0 24 24"
                                                 stroke="currentColor">
                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5"
                                                     d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
@@ -194,7 +194,7 @@
 
                                     <span class="font-bold tracking-tight" x-text="actionName"></span>
 
-                                    <svg class="w-4 h-4 opacity-50 transition-transform duration-200"
+                                    <svg class="w-4 h-4 shrink-0 opacity-50 transition-transform duration-200" style="width:1rem;height:1rem"
                                         :class="{'rotate-180': open}" fill="none" viewBox="0 0 24 24"
                                         stroke="currentColor">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -221,8 +221,8 @@
                                         <div @click="action = '{{ a.code }}'; actionName = '{{ a.name }}'; open = false; $dispatch('action-selected', '{{ a.code }}')"
                                             class="flex items-center gap-4 p-3 hover:bg-orange-50 rounded-xl cursor-pointer transition-colors group">
                                             <div
-                                                class="w-10 h-10 rounded-lg bg-orange-100 text-orange-600 flex items-center justify-center group-hover:bg-orange-200 group-hover:scale-110 transition-all duration-200">
-                                                <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24"
+                                                class="w-10 h-10 shrink-0 max-w-10 max-h-10 rounded-lg bg-orange-100 text-orange-600 flex items-center justify-center group-hover:bg-orange-200 transition-all duration-200">
+                                                <svg class="shrink-0" style="width:1.25rem;height:1.25rem" fill="none" viewBox="0 0 24 24"
                                                     stroke="currentColor">
                                                     <path stroke-linecap="round" stroke-linejoin="round"
                                                         stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
