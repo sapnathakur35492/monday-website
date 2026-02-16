@@ -5,6 +5,15 @@
     display: none !important;
 }
 
+/* Automation UI: prevent oversized icons/logos (big logo bug) */
+#automation-modal-container svg,
+#automation-modal-container [class*="rounded-lg"] svg,
+#automation-modal-container [class*="rounded-xl"] svg {
+    max-width: 3rem !important;
+    max-height: 3rem !important;
+    flex-shrink: 0 !important;
+}
+
 :root {
     /* Monday.com Inspired Color Palette */
     --primary: #6161FF;

@@ -458,13 +458,20 @@
 </div>
 
 <style>
-    [x-cloak] {
-        display: none !important;
-    }
+    [x-cloak] { display: none !important; }
     /* Prevent any icon/logo from ever growing in automation modal */
-    .fixed.inset-0.z-50 svg {
+    .fixed.inset-0.z-50 svg,
+    .fixed.inset-0.z-50 [class*="rounded-lg"] svg,
+    .fixed.inset-0.z-50 [class*="rounded-xl"] svg {
         max-width: 3rem !important;
         max-height: 3rem !important;
-        flex-shrink: 0;
+        flex-shrink: 0 !important;
+    }
+    .fixed.inset-0.z-50 div[class*="w-10"][class*="h-10"],
+    .fixed.inset-0.z-50 div[class*="w-8"][class*="h-8"],
+    .fixed.inset-0.z-50 div[class*="w-16"][class*="h-16"] {
+        max-width: 4rem !important;
+        max-height: 4rem !important;
+        flex-shrink: 0 !important;
     }
 </style>

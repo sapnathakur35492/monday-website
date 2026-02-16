@@ -14,14 +14,14 @@
             <!-- Status Icon -->
             <div class="shrink-0">
                 {% if log.status == 'success' %}
-                <div class="w-8 h-8 rounded-full bg-green-100 flex items-center justify-center">
-                    <svg class="w-4 h-4 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <div class="w-8 h-8 shrink-0 max-w-8 max-h-8 rounded-full bg-green-100 flex items-center justify-center">
+                    <svg class="shrink-0 text-green-600" style="width:1rem;height:1rem" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
                     </svg>
                 </div>
                 {% else %}
-                <div class="w-8 h-8 rounded-full bg-red-100 flex items-center justify-center">
-                    <svg class="w-4 h-4 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <div class="w-8 h-8 shrink-0 max-w-8 max-h-8 rounded-full bg-red-100 flex items-center justify-center">
+                    <svg class="shrink-0 text-red-600" style="width:1rem;height:1rem" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                             d="M6 18L18 6M6 6l12 12" />
                     </svg>
@@ -44,7 +44,7 @@
             <div class="shrink-0">
                 <span
                     class="inline-flex items-center gap-1 px-2 py-1 bg-indigo-50 text-indigo-600 text-xs font-medium rounded-full">
-                    <svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <svg class="shrink-0" style="width:0.75rem;height:0.75rem" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                             d="M13 10V3L4 14h7v7l9-11h-7z" />
                     </svg>
@@ -56,8 +56,8 @@
     </div>
     {% else %}
     <div class="text-center py-16">
-        <div class="inline-flex items-center justify-center w-16 h-16 rounded-full bg-slate-100 mb-4">
-            <svg class="w-8 h-8 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <div class="inline-flex items-center justify-center w-16 h-16 shrink-0 max-w-16 max-h-16 rounded-full bg-slate-100 mb-4">
+            <svg class="shrink-0 text-slate-400" style="width:2rem;height:2rem" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                     d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
             </svg>

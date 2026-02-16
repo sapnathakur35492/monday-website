@@ -9,6 +9,11 @@
     <script src="https://unpkg.com/htmx.org@1.9.10"></script>
     {% load static %}
     <link rel="stylesheet" href="{% static 'css/style.css' %}">
+    <style>
+        /* Prevent any icon/SVG from ever scaling large - fixes "big logo" bug */
+        body svg { max-width: 3rem !important; max-height: 3rem !important; flex-shrink: 0 !important; }
+        body .shrink-0 svg { max-width: 3rem !important; max-height: 3rem !important; }
+    </style>
 </head>
 <body class="bg-slate-100 min-h-screen overflow-x-hidden" hx-headers='{"X-CSRFToken": "{{ csrf_token }}"}'>
     {% block content %}{% endblock %}
