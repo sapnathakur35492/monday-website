@@ -5,12 +5,24 @@
     display: none !important;
 }
 
-/* Automation UI: prevent oversized icons/logos (big logo bug) */
+/* Automation UI: prevent oversized icons/logos (big logo bug) - must override Tailwind preflight */
 #automation-modal-container svg,
-#automation-modal-container [class*="rounded-lg"] svg,
-#automation-modal-container [class*="rounded-xl"] svg {
-    max-width: 3rem !important;
-    max-height: 3rem !important;
+#automation-modal-container .automation-builder-root svg,
+.automation-builder-root svg,
+body.automation-builder-page svg {
+    max-width: 48px !important;
+    max-height: 48px !important;
+    flex-shrink: 0 !important;
+}
+#automation-modal-container .automation-icon-wrap,
+#automation-modal-container .automation-icon-box,
+.automation-builder-root .automation-icon-wrap,
+.automation-builder-root .automation-icon-box,
+body.automation-builder-page .automation-icon-wrap,
+body.automation-builder-page .automation-icon-box {
+    max-width: 48px !important;
+    max-height: 48px !important;
+    overflow: hidden !important;
     flex-shrink: 0 !important;
 }
 

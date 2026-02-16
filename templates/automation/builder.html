@@ -2,16 +2,15 @@
 {% load static %}
 
 {% block content %}
-<div class="fixed inset-0 z-[100] flex items-center justify-center bg-slate-900/50 backdrop-blur-sm p-4 overflow-hidden" style="width:100vw;height:100vh;max-width:100vw;max-height:100vh;">
+<div class="automation-builder-root fixed inset-0 z-[100] flex items-center justify-center bg-slate-900/50 backdrop-blur-sm p-4 overflow-hidden" style="width:100vw;height:100vh;max-width:100vw;max-height:100vh;">
     <div class="flex h-[80vh] max-h-[calc(100vh-2rem)] w-[90vw] max-w-6xl bg-white rounded-xl shadow-2xl overflow-hidden min-w-0 shrink-0">
 
         <!-- Sidebar -->
         <div class="w-64 shrink-0 bg-slate-50 border-r border-slate-200 flex flex-col">
             <div class="p-6 border-b border-slate-200/50 shrink-0">
                 <div class="flex items-center gap-3 text-slate-800 font-bold text-xl min-w-0">
-                    <div
-                        class="automation-icon-box w-8 h-8 shrink-0 max-w-[2rem] max-h-[2rem] bg-gradient-to-br from-indigo-500 to-purple-600 rounded-lg flex items-center justify-center text-white shadow-sm">
-                        <svg width="20" height="20" class="w-5 h-5 shrink-0" style="min-width:1.25rem;max-width:1.25rem;height:1.25rem" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                    <div class="automation-icon-wrap automation-icon-box w-8 h-8 shrink-0 max-w-[2rem] max-h-[2rem] bg-gradient-to-br from-indigo-500 to-purple-600 rounded-lg flex items-center justify-center text-white shadow-sm" style="width:32px;height:32px;min-width:32px;min-height:32px;max-width:32px;max-height:32px;">
+                        <svg width="20" height="20" class="w-5 h-5 shrink-0" style="width:20px;height:20px;max-width:20px;max-height:20px;min-width:20px;min-height:20px" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                 d="M13 10V3L4 14h7v7l9-11h-7z" />
                         </svg>
@@ -23,18 +22,18 @@
             <nav class="flex-1 p-4 space-y-1 overflow-y-auto">
                 <a href="#"
                     class="flex items-center gap-3 px-3 py-2.5 bg-indigo-50 text-indigo-700 rounded-lg font-medium shrink-0">
-                    <svg width="20" height="20" class="w-5 h-5 shrink-0" style="width:1.25rem;height:1.25rem" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                    <span class="automation-icon-wrap inline-flex shrink-0" style="width:20px;height:20px;max-width:20px;max-height:20px;"><svg width="20" height="20" style="width:20px;height:20px;max-width:20px;max-height:20px;display:block" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                             d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
-                    </svg>
+                    </svg></span>
                     Automation Center
                 </a>
                 <a href="{% url 'automation_list' board.id %}"
                     class="flex items-center gap-3 px-3 py-2.5 text-slate-600 hover:bg-slate-100 rounded-lg font-medium transition-colors shrink-0">
-                    <svg width="20" height="20" class="w-5 h-5 shrink-0" style="width:1.25rem;height:1.25rem" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                    <span class="automation-icon-wrap inline-flex shrink-0" style="width:20px;height:20px;max-width:20px;max-height:20px;"><svg width="20" height="20" style="width:20px;height:20px;max-width:20px;max-height:20px;display:block" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                             d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
-                    </svg>
+                    </svg></span>
                     Board Automations
                     <span class="ml-auto bg-slate-200 text-slate-600 px-2 py-0.5 rounded-full text-xs font-bold">
                         {{ board.automations.count|default:0 }}
@@ -67,9 +66,9 @@
                     <button onclick="document.getElementById('automation-form').submit()"
                         class="bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-2.5 rounded-lg font-bold shadow-lg shadow-indigo-200 transition-all transform hover:scale-105 active:scale-95 flex items-center gap-2 shrink-0">
                         <span>Create Automation</span>
-                        <svg width="16" height="16" class="w-4 h-4 shrink-0" style="width:1rem;height:1rem" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                        <span class="automation-icon-wrap inline-flex shrink-0" style="width:16px;height:16px;max-width:16px;max-height:16px;"><svg width="16" height="16" style="width:16px;height:16px;max-width:16px;max-height:16px;display:block" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
-                        </svg>
+                        </svg></span>
                     </button>
                 </div>
             </div>
@@ -104,10 +103,8 @@
                                     :class="trigger ? 'bg-purple-100 text-purple-700 border-purple-200 hover:bg-purple-200' : 'bg-slate-100 text-slate-500 border-dashed border-slate-300 hover:border-slate-400 hover:text-slate-600'">
 
                                     <template x-if="trigger">
-                                        <div
-                                            class="w-6 h-6 shrink-0 max-w-6 max-h-6 rounded-full bg-purple-200 flex items-center justify-center text-purple-600">
-                                            <svg class="shrink-0" style="width:14px;height:14px" fill="none" viewBox="0 0 24 24"
-                                                stroke="currentColor">
+                                        <div class="automation-icon-wrap shrink-0 rounded-full bg-purple-200 flex items-center justify-center text-purple-600" style="width:24px;height:24px;max-width:24px;max-height:24px;">
+                                            <svg width="14" height="14" style="width:14px;height:14px;max-width:14px;max-height:14px;display:block" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5"
                                                     d="M13 10V3L4 14h7v7l9-11h-7z" />
                                             </svg>
@@ -116,12 +113,10 @@
 
                                     <span class="font-bold tracking-tight" x-text="triggerName"></span>
 
-                                    <svg class="w-4 h-4 shrink-0 opacity-50 transition-transform duration-200" style="width:1rem;height:1rem"
-                                        :class="{'rotate-180': open}" fill="none" viewBox="0 0 24 24"
-                                        stroke="currentColor">
+                                    <span class="automation-icon-wrap inline-flex shrink-0 opacity-50 transition-transform duration-200" style="width:16px;height:16px;max-width:16px;max-height:16px;" :class="{'rotate-180': open}"><svg width="16" height="16" style="width:16px;height:16px;max-width:16px;max-height:16px;display:block" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                             d="M19 9l-7 7-7-7" />
-                                    </svg>
+                                    </svg></span>
                                 </button>
 
                                 <!-- Trigger Popover -->
@@ -142,10 +137,8 @@
                                         {% for t in triggers %}
                                         <div @click="trigger = '{{ t.code }}'; triggerName = '{{ t.name }}'; open = false; $dispatch('trigger-selected', '{{ t.code }}')"
                                             class="flex items-center gap-4 p-3 hover:bg-purple-50 rounded-xl cursor-pointer transition-colors group">
-                                            <div
-                                                class="w-10 h-10 shrink-0 max-w-10 max-h-10 rounded-lg bg-purple-100 text-purple-600 flex items-center justify-center group-hover:bg-purple-200 transition-all duration-200">
-                                                <svg class="shrink-0" style="width:1.25rem;height:1.25rem" fill="none" viewBox="0 0 24 24"
-                                                    stroke="currentColor">
+                                            <div class="automation-icon-wrap w-10 h-10 shrink-0 max-w-10 max-h-10 rounded-lg bg-purple-100 text-purple-600 flex items-center justify-center group-hover:bg-purple-200 transition-all duration-200" style="width:40px;height:40px;max-width:40px;max-height:40px;">
+                                                <svg width="20" height="20" style="width:20px;height:20px;max-width:20px;max-height:20px;display:block" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                                     <path stroke-linecap="round" stroke-linejoin="round"
                                                         stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
                                                 </svg>
@@ -182,10 +175,8 @@
                                     :class="action ? 'bg-orange-100 text-orange-700 border-orange-200 hover:bg-orange-200' : 'bg-slate-100 text-slate-500 border-dashed border-slate-300 hover:border-slate-400 hover:text-slate-600'">
 
                                     <template x-if="action">
-                                        <div
-                                            class="w-6 h-6 shrink-0 max-w-6 max-h-6 rounded-full bg-orange-200 flex items-center justify-center text-orange-600">
-                                            <svg class="shrink-0" style="width:14px;height:14px" fill="none" viewBox="0 0 24 24"
-                                                stroke="currentColor">
+                                        <div class="automation-icon-wrap shrink-0 rounded-full bg-orange-200 flex items-center justify-center text-orange-600" style="width:24px;height:24px;max-width:24px;max-height:24px;">
+                                            <svg width="14" height="14" style="width:14px;height:14px;max-width:14px;max-height:14px;display:block" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5"
                                                     d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
                                             </svg>
@@ -194,12 +185,10 @@
 
                                     <span class="font-bold tracking-tight" x-text="actionName"></span>
 
-                                    <svg class="w-4 h-4 shrink-0 opacity-50 transition-transform duration-200" style="width:1rem;height:1rem"
-                                        :class="{'rotate-180': open}" fill="none" viewBox="0 0 24 24"
-                                        stroke="currentColor">
+                                    <span class="automation-icon-wrap inline-flex shrink-0 opacity-50 transition-transform duration-200" style="width:16px;height:16px;max-width:16px;max-height:16px;" :class="{'rotate-180': open}"><svg width="16" height="16" style="width:16px;height:16px;max-width:16px;max-height:16px;display:block" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                             d="M19 9l-7 7-7-7" />
-                                    </svg>
+                                    </svg></span>
                                 </button>
 
                                 <!-- Action Popover -->
@@ -220,10 +209,8 @@
                                         {% for a in actions %}
                                         <div @click="action = '{{ a.code }}'; actionName = '{{ a.name }}'; open = false; $dispatch('action-selected', '{{ a.code }}')"
                                             class="flex items-center gap-4 p-3 hover:bg-orange-50 rounded-xl cursor-pointer transition-colors group">
-                                            <div
-                                                class="w-10 h-10 shrink-0 max-w-10 max-h-10 rounded-lg bg-orange-100 text-orange-600 flex items-center justify-center group-hover:bg-orange-200 transition-all duration-200">
-                                                <svg class="shrink-0" style="width:1.25rem;height:1.25rem" fill="none" viewBox="0 0 24 24"
-                                                    stroke="currentColor">
+                                            <div class="automation-icon-wrap w-10 h-10 shrink-0 max-w-10 max-h-10 rounded-lg bg-orange-100 text-orange-600 flex items-center justify-center group-hover:bg-orange-200 transition-all duration-200" style="width:40px;height:40px;max-width:40px;max-height:40px;">
+                                                <svg width="20" height="20" style="width:20px;height:20px;max-width:20px;max-height:20px;display:block" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                                     <path stroke-linecap="round" stroke-linejoin="round"
                                                         stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
                                                 </svg>
