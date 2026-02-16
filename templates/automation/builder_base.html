@@ -15,7 +15,15 @@
         body .shrink-0 svg { max-width: 3rem !important; max-height: 3rem !important; }
     </style>
 </head>
-<body class="bg-slate-100 min-h-screen overflow-x-hidden" hx-headers='{"X-CSRFToken": "{{ csrf_token }}"}'>
+<body class="bg-slate-100 min-h-screen overflow-x-hidden automation-builder-page" hx-headers='{"X-CSRFToken": "{{ csrf_token }}"}'>
     {% block content %}{% endblock %}
+    <!-- Inject SVG cap after Tailwind so our rule wins over preflight -->
+    <script>
+        (function(){
+            var s = document.createElement('style');
+            s.textContent = '.automation-builder-page svg{max-width:3rem!important;max-height:3rem!important;flex-shrink:0!important}.automation-builder-page .automation-icon-box{max-width:3rem!important;max-height:3rem!important;overflow:hidden!important;flex-shrink:0!important}';
+            document.head.appendChild(s);
+        })();
+    </script>
 </body>
 </html>
